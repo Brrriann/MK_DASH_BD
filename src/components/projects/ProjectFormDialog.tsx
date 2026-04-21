@@ -164,6 +164,7 @@ export function ProjectFormDialog({
                 type="number"
                 min={0}
                 max={100}
+                step={1}
                 value={progress}
                 onChange={(e) => setProgress(Number(e.target.value))}
                 className="font-outfit"

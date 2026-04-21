@@ -318,7 +318,7 @@ export default function ClientDetailPage() {
               projects.map((project) => (
                 <Link
                   key={project.id}
-                  href="/tasks"
+                  href="/projects"
                   className="block rounded-xl border border-slate-200 bg-white shadow-sm p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center justify-between gap-3 mb-2">

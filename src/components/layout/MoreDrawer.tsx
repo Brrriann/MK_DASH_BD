@@ -33,7 +33,7 @@ export function MoreDrawer({ open, onOpenChange }: MoreDrawerProps) {
               onClick={() => onOpenChange(false)}
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors block"
             >
-              <item.icon size={18} weight="regular" className="text-slate-500" />
+              <item.icon size={16} weight="regular" className="text-slate-500" />
               <span className="font-medium text-sm">{item.label}</span>
             </Link>
           ))}

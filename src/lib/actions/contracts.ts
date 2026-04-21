@@ -1,5 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
-import type { Contract } from "@/lib/actions/clients";
+import type { Contract } from "@/lib/types";
 
 export type { Contract };
 

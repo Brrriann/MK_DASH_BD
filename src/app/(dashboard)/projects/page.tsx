@@ -66,6 +66,7 @@ export default function ProjectsPage() {
   const [sortBy, setSortBy] = useState("newest");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -109,11 +110,12 @@ export default function ProjectsPage() {
 
   async function handleDelete(project: Project) {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    setDeleteError(null);
     try {
       await deleteProject(project.id);
-      await loadData();
-    } catch {
-      // silently fail; in production we'd show an error
+      setProjects((prev) => prev.filter((p) => p.id !== project.id));
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "삭제에 실패했습니다.");
     }
   }
 
@@ -144,6 +146,13 @@ export default function ProjectsPage() {
           새 프로젝트
         </button>
       </div>
+
+      {/* Delete error */}
+      {deleteError && (
+        <p className="mb-4 text-sm text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          {deleteError}
+        </p>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-5">

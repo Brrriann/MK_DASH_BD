@@ -72,3 +72,26 @@ export interface TaxInvoice {
   client_id: string | null;
   created_at: string;
 }
+
+export interface Estimate {
+  id: string;
+  title: string;
+  amount: number;
+  status: EstimateStatus;
+  pdf_url: string | null;
+  client_id: string | null;
+  issued_at: string;
+  expires_at: string | null;
+  created_at: string;
+}
+
+export interface Contract {
+  id: string;
+  title: string;
+  status: ContractStatus;
+  pdf_url: string | null;
+  client_id: string | null;
+  signed_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+}

@@ -1,5 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
-import type { Estimate } from "@/lib/actions/clients";
+import type { Estimate } from "@/lib/types";
 
 export type { Estimate };
 

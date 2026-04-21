@@ -43,7 +43,7 @@ export async function fetchTasks(clientId?: string): Promise<TaskWithClient[]> {
   return (data ?? []) as TaskWithClient[];
 }
 
-export async function fetchProjects(): Promise<Project[]> {
+export async function fetchProjectOptions(): Promise<Project[]> {
   const supabase = getClient();
   const { data, error } = await supabase
     .from("projects")

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, PencilSimple, Trash, CurrencyKrw, FilePdf } from "@phosphor-icons/react";
+import { Plus, PencilSimple, Trash, CurrencyKrw, FilePdf, FileText } from "@phosphor-icons/react";
 import {
   Select,
   SelectContent,
@@ -204,7 +204,7 @@ export default function EstimatesPage() {
         </>
       ) : estimates.length === 0 ? (
         <EmptyState
-          icon={CurrencyKrw}
+          icon={FileText}
           title="견적서가 없습니다"
           description="새 견적서 버튼으로 첫 번째 항목을 추가해보세요"
         />

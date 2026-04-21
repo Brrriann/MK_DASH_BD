@@ -15,7 +15,7 @@ import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import {
   fetchTasks,
   fetchClients,
-  fetchProjects,
+  fetchProjectOptions,
   type TaskWithClient,
 } from "@/lib/actions/tasks";
 import type { Client, Project } from "@/lib/types";
@@ -44,7 +44,7 @@ export default function TasksPage() {
       const [taskData, clientData, projectData] = await Promise.all([
         fetchTasks(clientId),
         fetchClients(),
-        fetchProjects(),
+        fetchProjectOptions(),
       ]);
       setTasks(taskData);
       setClients(clientData);

@@ -16,14 +16,12 @@ import {
 } from "@phosphor-icons/react";
 
 // ────────────────────────────────────────────────────────────
-// Supabase client
+// Supabase client (module-level singleton)
 // ────────────────────────────────────────────────────────────
-function getSupabase() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 // ────────────────────────────────────────────────────────────
 // Reusable message components
@@ -73,8 +71,6 @@ function SettingsCard({
 // Main page
 // ────────────────────────────────────────────────────────────
 export default function SettingsPage() {
-  const supabase = getSupabase();
-
   // Current user
   const [user, setUser] = useState<User | null>(null);
 
@@ -101,7 +97,7 @@ export default function SettingsPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase]);
 
   // ── Email change handler ──────────────────────────────────
   async function handleEmailChange(e: React.FormEvent) {

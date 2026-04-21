@@ -1,5 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
-import type { Client, ClientWithRevenue, ClientStatus, Project, MeetingNote, TaxInvoice } from "@/lib/types";
+import type { Client, ClientWithRevenue, ClientStatus, Project, MeetingNote, TaxInvoice, Estimate, Contract } from "@/lib/types";
+
+export type { Estimate, Contract };
 
 export interface CreateClientInput {
   company_name: string;
@@ -10,29 +12,6 @@ export interface CreateClientInput {
   status: ClientStatus;
   source?: string;
   notes?: string;
-}
-
-export interface Estimate {
-  id: string;
-  title: string;
-  amount: number;
-  status: "pending" | "accepted" | "expired";
-  pdf_url: string | null;
-  client_id: string | null;
-  issued_at: string;
-  expires_at: string | null;
-  created_at: string;
-}
-
-export interface Contract {
-  id: string;
-  title: string;
-  status: "signed" | "pending" | "expired";
-  pdf_url: string | null;
-  client_id: string | null;
-  signed_at: string | null;
-  expires_at: string | null;
-  created_at: string;
 }
 
 function getClient() {
