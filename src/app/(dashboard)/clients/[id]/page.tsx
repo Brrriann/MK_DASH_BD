@@ -231,84 +231,81 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
+      {/* 연락처 정보 — 항상 노출 */}
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-5 mb-6">
+        <h2 className="font-outfit font-semibold text-slate-800 mb-4">연락처 정보</h2>
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3">
+            <User size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
+            <div>
+              <dt className="text-xs text-slate-400 mb-0.5">담당자</dt>
+              <dd className="text-sm text-slate-900">{client.contact_name}</dd>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <EnvelopeSimple size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
+            <div>
+              <dt className="text-xs text-slate-400 mb-0.5">이메일</dt>
+              <dd className="text-sm text-slate-900">{client.email}</dd>
+            </div>
+          </div>
+          {client.phone && (
+            <div className="flex items-start gap-3">
+              <Phone size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
+              <div>
+                <dt className="text-xs text-slate-400 mb-0.5">전화번호</dt>
+                <dd className="text-sm text-slate-900">{client.phone}</dd>
+              </div>
+            </div>
+          )}
+          {client.industry && (
+            <div className="flex items-start gap-3">
+              <Briefcase size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
+              <div>
+                <dt className="text-xs text-slate-400 mb-0.5">업종</dt>
+                <dd className="text-sm text-slate-900">{client.industry}</dd>
+              </div>
+            </div>
+          )}
+          {client.source && (
+            <div className="flex items-start gap-3">
+              <ShareNetwork size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
+              <div>
+                <dt className="text-xs text-slate-400 mb-0.5">소스</dt>
+                <dd className="text-sm text-slate-900">{client.source}</dd>
+              </div>
+            </div>
+          )}
+          <div className="flex items-start gap-3">
+            <Buildings size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
+            <div>
+              <dt className="text-xs text-slate-400 mb-0.5">등록일</dt>
+              <dd className="text-sm text-slate-900">{formatDate(client.created_at)}</dd>
+            </div>
+          </div>
+        </dl>
+
+        {client.notes && (
+          <div className="mt-5 pt-5 border-t border-slate-100">
+            <div className="flex items-start gap-3">
+              <Note size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-slate-400 mb-1">메모</p>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{client.notes}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Tabs */}
-      <Tabs defaultValue="overview">
+      <Tabs defaultValue="projects">
         <TabsList className="w-full justify-start mb-5">
-          <TabsTrigger value="overview">개요</TabsTrigger>
           <TabsTrigger value="projects">프로젝트</TabsTrigger>
           <TabsTrigger value="estimates">견적·계약</TabsTrigger>
           <TabsTrigger value="tax">세금계산서</TabsTrigger>
           <TabsTrigger value="communication">커뮤니케이션</TabsTrigger>
         </TabsList>
-
-        {/* 개요 Tab */}
-        <TabsContent value="overview">
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-5">
-            <h2 className="font-outfit font-semibold text-slate-800 mb-4">연락처 정보</h2>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3">
-                <User size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
-                <div>
-                  <dt className="text-xs text-slate-400 mb-0.5">담당자</dt>
-                  <dd className="text-sm text-slate-900">{client.contact_name}</dd>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <EnvelopeSimple size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
-                <div>
-                  <dt className="text-xs text-slate-400 mb-0.5">이메일</dt>
-                  <dd className="text-sm text-slate-900">{client.email}</dd>
-                </div>
-              </div>
-              {client.phone && (
-                <div className="flex items-start gap-3">
-                  <Phone size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
-                  <div>
-                    <dt className="text-xs text-slate-400 mb-0.5">전화번호</dt>
-                    <dd className="text-sm text-slate-900">{client.phone}</dd>
-                  </div>
-                </div>
-              )}
-              {client.industry && (
-                <div className="flex items-start gap-3">
-                  <Briefcase size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
-                  <div>
-                    <dt className="text-xs text-slate-400 mb-0.5">업종</dt>
-                    <dd className="text-sm text-slate-900">{client.industry}</dd>
-                  </div>
-                </div>
-              )}
-              {client.source && (
-                <div className="flex items-start gap-3">
-                  <ShareNetwork size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
-                  <div>
-                    <dt className="text-xs text-slate-400 mb-0.5">소스</dt>
-                    <dd className="text-sm text-slate-900">{client.source}</dd>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-start gap-3">
-                <Buildings size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
-                <div>
-                  <dt className="text-xs text-slate-400 mb-0.5">등록일</dt>
-                  <dd className="text-sm text-slate-900">{formatDate(client.created_at)}</dd>
-                </div>
-              </div>
-            </dl>
-
-            {client.notes && (
-              <div className="mt-5 pt-5 border-t border-slate-100">
-                <div className="flex items-start gap-3">
-                  <Note size={16} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1">메모</p>
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{client.notes}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </TabsContent>
 
         {/* 프로젝트 Tab */}
         <TabsContent value="projects">
