@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Cloudflare Pages: output files for edge runtime
+  // Individual routes declare `export const runtime = 'edge'` as needed
 };
 
 export default nextConfig;

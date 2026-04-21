@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pages:build": "opennextjs-cloudflare build",
+    "pages:preview": "npm run pages:build && wrangler dev",
+    "pages:deploy": "npm run pages:build && wrangler deploy"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -37,6 +40,8 @@
     "eslint-config-next": "15.5.15",
     "postcss": "^8",
     "tailwindcss": "^3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@opennextjs/cloudflare": "^1.19.3",
+    "wrangler": "^4.84.0"
   }
 }
