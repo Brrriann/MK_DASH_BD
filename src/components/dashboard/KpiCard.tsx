@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { Icon } from "@phosphor-icons/react/ssr";
+import type { Icon } from "@phosphor-icons/react";
 
 interface KpiCardProps {
   label: string;
