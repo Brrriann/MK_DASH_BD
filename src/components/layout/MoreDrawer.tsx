@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { CurrencyKrw, FileText, Receipt, Sparkle, GearSix } from "@phosphor-icons/react";
+import { FolderOpen, CurrencyKrw, FileText, Receipt, Sparkle, GearSix } from "@phosphor-icons/react";
 
 const MORE_ITEMS = [
+  { href: "/projects", label: "프로젝트", icon: FolderOpen },
   { href: "/estimates", label: "견적서", icon: CurrencyKrw },
   { href: "/contracts", label: "계약서", icon: FileText },
   { href: "/invoices", label: "세금계산서", icon: Receipt },

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  SquaresFour, Buildings, Kanban, NotePencil,
+  SquaresFour, Buildings, Kanban, FolderOpen, NotePencil,
   CurrencyKrw, FileText, Receipt, Sparkle, GearSix
 } from "@phosphor-icons/react";
 import { NavItem } from "./NavItem";
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/", label: "홈", icon: SquaresFour },
   { href: "/clients", label: "클라이언트", icon: Buildings },
   { href: "/tasks", label: "업무관리", icon: Kanban },
+  { href: "/projects", label: "프로젝트", icon: FolderOpen },
   { href: "/meetings", label: "미팅노트", icon: NotePencil },
   { href: "/estimates", label: "견적서", icon: CurrencyKrw },
   { href: "/contracts", label: "계약서", icon: FileText },
