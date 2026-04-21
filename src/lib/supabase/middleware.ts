@@ -1,27 +1,32 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-function loginRedirect(request: NextRequest) {
-  // Use new URL() instead of nextUrl.clone() for Cloudflare Workers compatibility
+// Routes that do NOT require authentication
+const PUBLIC_PATHS = ["/login", "/portal", "/api"];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+}
+
+function loginRedirect(request: NextRequest): NextResponse {
   const loginUrl = new URL("/login", request.url);
   return NextResponse.redirect(loginUrl);
 }
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest): Promise<NextResponse> {
+  const { pathname } = new URL(request.url);
+
+  // Always allow public paths without auth check
+  if (isPublicPath(pathname)) {
+    return NextResponse.next({ request });
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const { pathname } = new URL(request.url);
-  const isAuthRoute = pathname.startsWith("/login");
-  const isPortalRoute = pathname.startsWith("/portal");
-  const isApiRoute = pathname.startsWith("/api");
-  const isProtected = !isAuthRoute && !isPortalRoute && !isApiRoute;
-
-  // Env vars not set — redirect to login for all protected routes
+  // If env vars are missing, redirect to login (safe fallback)
   if (!supabaseUrl || !supabaseAnonKey) {
-    return isProtected
-      ? loginRedirect(request)
-      : NextResponse.next({ request });
+    return loginRedirect(request);
   }
 
   let supabaseResponse = NextResponse.next({ request });
@@ -29,7 +34,9 @@ export async function updateSession(request: NextRequest) {
   try {
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
-        getAll() { return request.cookies.getAll(); },
+        getAll() {
+          return request.cookies.getAll();
+        },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
@@ -42,16 +49,17 @@ export async function updateSession(request: NextRequest) {
       },
     });
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!user && isProtected) {
+    // No authenticated user → redirect to login
+    if (!user) {
       return loginRedirect(request);
     }
   } catch {
-    // Auth check failed — redirect to login for safety
-    if (isProtected) {
-      return loginRedirect(request);
-    }
+    // Auth check failed → redirect to login for safety
+    return loginRedirect(request);
   }
 
   return supabaseResponse;
