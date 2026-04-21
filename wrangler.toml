@@ -6,3 +6,8 @@ compatibility_flags = ["nodejs_compat"]
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
+
+# Non-secret runtime vars — override with Worker secrets in production
+# (NEXT_PUBLIC_* are baked in at build time by Next.js; listed here for Worker runtime access)
+[vars]
+NODE_ENV = "production"
