@@ -20,7 +20,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   return (
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider>
       <aside className="fixed inset-y-0 left-0 z-30 flex flex-col bg-sidebar-bg border-r border-slate-800 w-16 lg:w-60">
         {/* 데스크톱: 240px */}
         <div className="hidden lg:flex flex-col h-full py-5">
@@ -47,7 +47,7 @@ export function Sidebar() {
           <nav className="flex-1 space-y-1 w-full px-2">
             {NAV_ITEMS.map((item) => (
               <Tooltip key={item.href}>
-                <TooltipTrigger asChild>
+                <TooltipTrigger>
                   <div><NavItem {...item} collapsed /></div>
                 </TooltipTrigger>
                 <TooltipContent side="right">{item.label}</TooltipContent>
@@ -56,7 +56,7 @@ export function Sidebar() {
           </nav>
           <div className="w-full px-2 pt-4 border-t border-slate-800">
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <div><NavItem href="/settings" label="설정" icon={GearSix} collapsed /></div>
               </TooltipTrigger>
               <TooltipContent side="right">설정</TooltipContent>

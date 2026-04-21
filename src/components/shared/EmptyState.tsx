@@ -1,5 +1,4 @@
-import type { Icon } from "@phosphor-icons/react/ssr";
-import { Button } from "@/components/ui/button";
+import type { Icon } from "@phosphor-icons/react";
 import Link from "next/link";
 
 interface EmptyStateProps {
@@ -19,9 +18,12 @@ export function EmptyState({ icon: IconComponent, title, description, actionLabe
       <h3 className="font-outfit font-semibold text-slate-800 mb-1">{title}</h3>
       <p className="text-slate-400 text-sm max-w-xs leading-relaxed">{description}</p>
       {actionLabel && actionHref && (
-        <Button asChild className="mt-5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-transform">
-          <Link href={actionHref}>{actionLabel}</Link>
-        </Button>
+        <Link
+          href={actionHref}
+          className="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 active:scale-[0.98] transition-all"
+        >
+          {actionLabel}
+        </Link>
       )}
     </div>
   );
