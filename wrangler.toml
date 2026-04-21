@@ -1,14 +1,8 @@
 name = "mk-dash-bd"
+main = ".open-next/worker.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# OpenNext Cloudflare 어댑터 출력
-main = ".open-next/worker.js"
-
-# 정적 파일
-assets = { directory = ".open-next/assets", binding = "ASSETS" }
-
-[vars]
-# 실제값은 Cloudflare 대시보드 → Settings → Environment Variables에서 설정
-# NEXT_PUBLIC_SUPABASE_URL = ""
-# NEXT_PUBLIC_SUPABASE_ANON_KEY = ""
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
