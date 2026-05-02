@@ -134,13 +134,15 @@ export function InvoiceFormDialog({
         return;
       }
 
-      await updateClient(selectedClient.id, {
-        business_registration_number: json.business_registration_number ?? null,
-        representative_name: json.representative_name ?? null,
-        business_address: json.business_address ?? null,
-        business_type: json.business_type ?? null,
-        business_item: json.business_item ?? null,
-      });
+      const updates: Record<string, string> = {};
+      if (json.business_registration_number) updates.business_registration_number = json.business_registration_number;
+      if (json.representative_name) updates.representative_name = json.representative_name;
+      if (json.business_address) updates.business_address = json.business_address;
+      if (json.business_type) updates.business_type = json.business_type;
+      if (json.business_item) updates.business_item = json.business_item;
+      if (Object.keys(updates).length > 0) {
+        await updateClient(selectedClient.id, updates);
+      }
       setOcrDone(true);
     } catch {
       setError("OCR 처리 중 오류가 발생했습니다.");
@@ -286,14 +288,14 @@ export function InvoiceFormDialog({
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={saving}
+              disabled={saving || ocrLoading}
               className="font-outfit"
             >
               취소
             </Button>
             <Button
               type="submit"
-              disabled={saving}
+              disabled={saving || ocrLoading}
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium font-outfit"
             >
               {saving ? "저장 중..." : isEdit ? "수정 완료" : "저장"}

@@ -1,5 +1,6 @@
 // src/app/api/ocr/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 const NVIDIA_API_URL =
   "https://integrate.api.nvidia.com/v1/chat/completions";
@@ -16,6 +17,12 @@ Extract the following fields and return ONLY valid JSON, no other text:
 If a field is not visible, use null.`;
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "NVIDIA_API_KEY not configured" }, { status: 500 });
@@ -83,16 +90,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "OCR 처리 중 오류가 발생했습니다." }, { status: 502 });
     }
 
-    const result = await response.json();
-    const content = result.choices?.[0]?.message?.content ?? "";
+    const nvidiaResult = await response.json();
+    const content = nvidiaResult.choices?.[0]?.message?.content ?? "";
 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return NextResponse.json({ error: "OCR 결과를 파싱할 수 없습니다." }, { status: 422 });
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
-    return NextResponse.json(parsed);
+    const raw = JSON.parse(jsonMatch[0]);
+    const fields = [
+      "business_registration_number",
+      "representative_name",
+      "business_address",
+      "business_type",
+      "business_item",
+    ] as const;
+    const extracted: Record<string, string | null> = {};
+    for (const field of fields) {
+      const val = raw[field];
+      extracted[field] = typeof val === "string" && val.length <= 200 ? val : null;
+    }
+    return NextResponse.json(extracted);
   } catch (err) {
     console.error("OCR route error:", err);
     return NextResponse.json({ error: "서버 오류가 발생했습니다." }, { status: 500 });

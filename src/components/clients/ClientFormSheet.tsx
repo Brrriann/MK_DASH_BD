@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -72,6 +72,13 @@ export function ClientFormSheet({
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState<string | null>(null);
   const [ocrSuccess, setOcrSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setOcrSuccess(false);
+      setOcrError(null);
+    }
+  }, [open]);
 
   function validate(): boolean {
     const newErrors: FormErrors = {};
@@ -147,6 +154,7 @@ export function ClientFormSheet({
 
     setOcrLoading(true);
     setOcrError(null);
+    setOcrSuccess(false);
 
     try {
       const fd = new FormData();
@@ -434,8 +442,7 @@ export function ClientFormSheet({
             취소
           </button>
           <button
-            type="submit"
-            form=""
+            type="button"
             onClick={handleSubmit}
             disabled={submitting}
             className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
