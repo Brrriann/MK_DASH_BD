@@ -60,10 +60,17 @@ export function ClientFormSheet({
     status: client?.status ?? "potential",
     source: client?.source ?? "",
     notes: client?.notes ?? "",
+    business_registration_number: client?.business_registration_number ?? "",
+    representative_name: client?.representative_name ?? "",
+    business_address: client?.business_address ?? "",
+    business_type: client?.business_type ?? "",
+    business_item: client?.business_item ?? "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState<string | null>(null);
 
   function validate(): boolean {
     const newErrors: FormErrors = {};
@@ -111,6 +118,11 @@ export function ClientFormSheet({
         status: formData.status,
         source: formData.source?.trim() || undefined,
         notes: formData.notes?.trim() || undefined,
+        business_registration_number: formData.business_registration_number?.trim() || undefined,
+        representative_name: formData.representative_name?.trim() || undefined,
+        business_address: formData.business_address?.trim() || undefined,
+        business_type: formData.business_type?.trim() || undefined,
+        business_item: formData.business_item?.trim() || undefined,
       };
 
       if (isEdit && client) {
@@ -125,6 +137,40 @@ export function ClientFormSheet({
       setErrors({ general: "저장 중 오류가 발생했습니다. 다시 시도해 주세요." });
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleOcrUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setOcrLoading(true);
+    setOcrError(null);
+
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch("/api/ocr", { method: "POST", body: fd });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setOcrError(json.error ?? "OCR 처리 중 오류가 발생했습니다.");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        business_registration_number: json.business_registration_number ?? prev.business_registration_number,
+        representative_name: json.representative_name ?? prev.representative_name,
+        business_address: json.business_address ?? prev.business_address,
+        business_type: json.business_type ?? prev.business_type,
+        business_item: json.business_item ?? prev.business_item,
+      }));
+    } catch {
+      setOcrError("네트워크 오류가 발생했습니다.");
+    } finally {
+      setOcrLoading(false);
+      e.target.value = "";
     }
   }
 
@@ -285,6 +331,89 @@ export function ClientFormSheet({
               rows={3}
               className="text-sm resize-none"
             />
+          </div>
+
+          {/* 사업자 정보 */}
+          <div className="flex flex-col gap-3 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-700">사업자 정보</p>
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  onChange={handleOcrUpload}
+                  disabled={ocrLoading}
+                />
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer">
+                  {ocrLoading ? (
+                    <>
+                      <span className="h-3.5 w-3.5 rounded-full border-2 border-blue-300 border-t-blue-700 animate-spin" />
+                      스캔 중...
+                    </>
+                  ) : (
+                    <>사업자등록증 스캔</>
+                  )}
+                </span>
+              </label>
+            </div>
+            {ocrError && (
+              <p className="text-xs text-red-500">{ocrError}</p>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="brn" className="text-sm font-medium text-slate-700">사업자등록번호</Label>
+                <Input
+                  id="brn"
+                  value={formData.business_registration_number ?? ""}
+                  onChange={(e) => handleChange("business_registration_number", e.target.value)}
+                  placeholder="000-00-00000"
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="rep_name" className="text-sm font-medium text-slate-700">대표자명</Label>
+                <Input
+                  id="rep_name"
+                  value={formData.representative_name ?? ""}
+                  onChange={(e) => handleChange("representative_name", e.target.value)}
+                  placeholder="홍길동"
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="biz_addr" className="text-sm font-medium text-slate-700">사업장소재지</Label>
+              <Input
+                id="biz_addr"
+                value={formData.business_address ?? ""}
+                onChange={(e) => handleChange("business_address", e.target.value)}
+                placeholder="서울특별시 강남구 ..."
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="biz_type" className="text-sm font-medium text-slate-700">업태</Label>
+                <Input
+                  id="biz_type"
+                  value={formData.business_type ?? ""}
+                  onChange={(e) => handleChange("business_type", e.target.value)}
+                  placeholder="서비스"
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="biz_item" className="text-sm font-medium text-slate-700">종목</Label>
+                <Input
+                  id="biz_item"
+                  value={formData.business_item ?? ""}
+                  onChange={(e) => handleChange("business_item", e.target.value)}
+                  placeholder="소프트웨어 개발"
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
           </div>
         </form>
 
