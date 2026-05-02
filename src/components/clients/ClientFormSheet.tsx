@@ -35,6 +35,15 @@ const statusOptions: { value: ClientStatus; label: string }[] = [
   { value: "ended", label: "종료" },
 ];
 
+const SOURCE_OPTIONS = [
+  { value: "숨고", label: "숨고" },
+  { value: "크몽", label: "크몽" },
+  { value: "위시캣", label: "위시캣" },
+  { value: "라우드소싱", label: "라우드소싱" },
+  { value: "Fiverr", label: "Fiverr" },
+  { value: "기타", label: "기타" },
+] as const;
+
 interface FormErrors {
   company_name?: string;
   contact_name?: string;
@@ -275,6 +284,10 @@ export function ClientFormSheet({
             />
           </div>
 
+          <div className="border-t border-slate-100 pt-1">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">기본 정보</p>
+          </div>
+
           {/* 업종 */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="industry" className="text-sm font-medium text-slate-700">
@@ -316,16 +329,28 @@ export function ClientFormSheet({
 
           {/* 소스 */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="source" className="text-sm font-medium text-slate-700">
-              소스
+            <Label className="text-sm font-medium text-slate-700">
+              인입경로
             </Label>
-            <Input
-              id="source"
+            <Select
               value={formData.source ?? ""}
-              onChange={(e) => handleChange("source", e.target.value)}
-              placeholder="소개 / 광고 / 직접 방문 등"
-              className="h-9 text-sm"
-            />
+              onValueChange={(val) => handleChange("source", val)}
+            >
+              <SelectTrigger className="h-9 text-sm w-full">
+                <SelectValue placeholder="인입경로 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {SOURCE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="border-t border-slate-100 pt-1">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">메모</p>
           </div>
 
           {/* 메모 */}
