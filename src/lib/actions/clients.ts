@@ -12,6 +12,11 @@ export interface CreateClientInput {
   status: ClientStatus;
   source?: string;
   notes?: string;
+  business_registration_number?: string;
+  representative_name?: string;
+  business_address?: string;
+  business_type?: string;
+  business_item?: string;
 }
 
 function getClient() {
@@ -80,6 +85,11 @@ export async function createClient(data: CreateClientInput): Promise<Client> {
       status: data.status,
       source: data.source ?? null,
       notes: data.notes ?? null,
+      business_registration_number: data.business_registration_number ?? null,
+      representative_name: data.representative_name ?? null,
+      business_address: data.business_address ?? null,
+      business_type: data.business_type ?? null,
+      business_item: data.business_item ?? null,
     })
     .select()
     .single();

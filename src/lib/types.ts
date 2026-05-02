@@ -19,6 +19,11 @@ export interface Client {
   portal_expires_at: string | null;
   notes: string | null;
   first_contract_at: string | null;
+  business_registration_number: string | null;
+  representative_name: string | null;
+  business_address: string | null;
+  business_type: string | null;
+  business_item: string | null;
   created_at: string;
   updated_at: string;
 }
