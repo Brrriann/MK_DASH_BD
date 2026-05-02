@@ -199,3 +199,14 @@ CREATE POLICY "portal_select" ON clients FOR SELECT
     )::uuid
     AND (portal_expires_at IS NULL OR portal_expires_at > now())
   );
+
+-- ----------------------------------------------------------------
+-- 005: clients 사업자 정보 필드 추가
+-- ----------------------------------------------------------------
+
+ALTER TABLE clients
+  ADD COLUMN IF NOT EXISTS business_registration_number TEXT,
+  ADD COLUMN IF NOT EXISTS representative_name TEXT,
+  ADD COLUMN IF NOT EXISTS business_address TEXT,
+  ADD COLUMN IF NOT EXISTS business_type TEXT,
+  ADD COLUMN IF NOT EXISTS business_item TEXT;
