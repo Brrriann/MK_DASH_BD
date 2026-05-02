@@ -234,7 +234,7 @@ export function InvoiceFormDialog({
                       스캔 중...
                     </>
                   ) : (
-                    "스캔하기"
+                    "사업자등록증 스캔하기"
                   )}
                 </span>
               </label>

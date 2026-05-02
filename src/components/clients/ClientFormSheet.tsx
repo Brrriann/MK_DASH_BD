@@ -71,6 +71,7 @@ export function ClientFormSheet({
   const [submitting, setSubmitting] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState<string | null>(null);
+  const [ocrSuccess, setOcrSuccess] = useState(false);
 
   function validate(): boolean {
     const newErrors: FormErrors = {};
@@ -166,6 +167,7 @@ export function ClientFormSheet({
         business_type: json.business_type ?? prev.business_type,
         business_item: json.business_item ?? prev.business_item,
       }));
+      setOcrSuccess(true);
     } catch {
       setOcrError("네트워크 오류가 발생했습니다.");
     } finally {
@@ -359,6 +361,11 @@ export function ClientFormSheet({
             </div>
             {ocrError && (
               <p className="text-xs text-red-500">{ocrError}</p>
+            )}
+            {ocrSuccess && !ocrError && (
+              <p className="text-xs text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
+                사업자 정보가 자동으로 입력되었습니다.
+              </p>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
