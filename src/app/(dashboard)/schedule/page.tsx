@@ -16,6 +16,21 @@ interface ScheduleEvent {
   clientId?: string;
 }
 
+interface MeetingRow {
+  id: string;
+  title: string;
+  met_at: string;
+  client_id: string | null;
+  clients: { company_name: string } | null;
+}
+
+interface ProjectRow {
+  id: string;
+  title: string;
+  client_id: string | null;
+  clients: { company_name: string } | null;
+}
+
 function getSupabase() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,23 +62,23 @@ export default function SchedulePage() {
           .eq("status", "active"),
       ]);
 
-      const meetingEvents: ScheduleEvent[] = (meetings ?? []).map((m: any) => ({
+      const meetingEvents: ScheduleEvent[] = (meetings ?? []).map((m: MeetingRow) => ({
         id: m.id,
         title: m.title,
-        date: m.met_at as string,
+        date: m.met_at,
         type: "meeting" as const,
-        clientName: (m.clients as any)?.company_name,
-        clientId: m.client_id,
+        clientName: m.clients?.company_name,
+        clientId: m.client_id ?? undefined,
       }));
 
       const todayStr = new Date().toISOString().split("T")[0];
-      const projectEvents: ScheduleEvent[] = (projects ?? []).map((p: any) => ({
+      const projectEvents: ScheduleEvent[] = (projects ?? []).map((p: ProjectRow) => ({
         id: p.id,
         title: p.title,
         date: todayStr,
         type: "project" as const,
-        clientName: (p.clients as any)?.company_name,
-        clientId: p.client_id,
+        clientName: p.clients?.company_name,
+        clientId: p.client_id ?? undefined,
       }));
 
       setEvents([...meetingEvents, ...projectEvents]);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, PencilSimple, Trash, CurrencyKrw, FilePdf, FileText } from "@phosphor-icons/react";
+import { Plus, PencilSimple, Trash, FilePdf, FileText } from "@phosphor-icons/react";
 import {
   Select,
   SelectContent,

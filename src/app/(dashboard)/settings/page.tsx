@@ -114,7 +114,7 @@ export default function SettingsPage() {
       const meta = user?.user_metadata?.business_profile;
       if (meta) setBizProfile(meta);
     });
-  }, [supabase]);
+  }, []);
 
   // ── Email change handler ──────────────────────────────────
   async function handleEmailChange(e: React.FormEvent) {
