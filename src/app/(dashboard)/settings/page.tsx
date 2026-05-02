@@ -13,6 +13,7 @@ import {
   CloudCheck,
   CheckCircle,
   XCircle,
+  Buildings,
 } from "@phosphor-icons/react";
 
 // ────────────────────────────────────────────────────────────
@@ -92,10 +93,26 @@ export default function SettingsPage() {
   const [connLoading, setConnLoading] = useState(false);
   const [connUserId, setConnUserId] = useState<string | null>(null);
 
+  // Business profile
+  const [bizProfile, setBizProfile] = useState({
+    registration_number: "",
+    organization_name: "",
+    representative_name: "",
+    business_address: "",
+    business_type: "",
+    business_item: "",
+    manager_email: "",
+  });
+  const [bizLoading, setBizLoading] = useState(false);
+  const [bizSuccess, setBizSuccess] = useState("");
+  const [bizError, setBizError] = useState("");
+
   // Load user on mount
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
+      const meta = user?.user_metadata?.business_profile;
+      if (meta) setBizProfile(meta);
     });
   }, [supabase]);
 
@@ -168,6 +185,23 @@ export default function SettingsPage() {
       setConnStatus("fail");
     } finally {
       setConnLoading(false);
+    }
+  }
+
+  // ── Business profile save handler ────────────────────────
+  async function handleBizProfileSave(e: React.FormEvent) {
+    e.preventDefault();
+    setBizError("");
+    setBizSuccess("");
+    setBizLoading(true);
+    const { error } = await supabase.auth.updateUser({
+      data: { business_profile: bizProfile },
+    });
+    setBizLoading(false);
+    if (error) {
+      setBizError(error.message);
+    } else {
+      setBizSuccess("사업자 정보가 저장되었습니다.");
     }
   }
 
@@ -349,6 +383,111 @@ export default function SettingsPage() {
               </p>
             </div>
           )}
+        </SettingsCard>
+
+        {/* ── Section 4: 내 사업자 정보 ─────────────────────────── */}
+        <SettingsCard
+          title="내 사업자 정보"
+          icon={<Buildings size={16} weight="regular" />}
+        >
+          <p className="text-xs text-slate-500 mb-4">
+            세금계산서 발행 시 공급자 정보로 사용됩니다.
+          </p>
+          <form onSubmit={handleBizProfileSave} className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="biz-reg" className="text-sm font-medium text-slate-700 mb-1 block">사업자등록번호</Label>
+                <Input
+                  id="biz-reg"
+                  value={bizProfile.registration_number}
+                  onChange={(e) => setBizProfile((p) => ({ ...p, registration_number: e.target.value }))}
+                  placeholder="000-00-00000"
+                  className="h-9 text-sm font-outfit"
+                  disabled={bizLoading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="biz-rep" className="text-sm font-medium text-slate-700 mb-1 block">대표자명</Label>
+                <Input
+                  id="biz-rep"
+                  value={bizProfile.representative_name}
+                  onChange={(e) => setBizProfile((p) => ({ ...p, representative_name: e.target.value }))}
+                  placeholder="홍길동"
+                  className="h-9 text-sm font-outfit"
+                  disabled={bizLoading}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="biz-org" className="text-sm font-medium text-slate-700 mb-1 block">상호명</Label>
+              <Input
+                id="biz-org"
+                value={bizProfile.organization_name}
+                onChange={(e) => setBizProfile((p) => ({ ...p, organization_name: e.target.value }))}
+                placeholder="(주)마그네이트코리아"
+                className="h-9 text-sm font-outfit"
+                disabled={bizLoading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="biz-addr" className="text-sm font-medium text-slate-700 mb-1 block">사업장 소재지</Label>
+              <Input
+                id="biz-addr"
+                value={bizProfile.business_address}
+                onChange={(e) => setBizProfile((p) => ({ ...p, business_address: e.target.value }))}
+                placeholder="서울특별시 강남구 ..."
+                className="h-9 text-sm font-outfit"
+                disabled={bizLoading}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="biz-type" className="text-sm font-medium text-slate-700 mb-1 block">업태</Label>
+                <Input
+                  id="biz-type"
+                  value={bizProfile.business_type}
+                  onChange={(e) => setBizProfile((p) => ({ ...p, business_type: e.target.value }))}
+                  placeholder="서비스"
+                  className="h-9 text-sm font-outfit"
+                  disabled={bizLoading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="biz-item" className="text-sm font-medium text-slate-700 mb-1 block">종목</Label>
+                <Input
+                  id="biz-item"
+                  value={bizProfile.business_item}
+                  onChange={(e) => setBizProfile((p) => ({ ...p, business_item: e.target.value }))}
+                  placeholder="소프트웨어 개발"
+                  className="h-9 text-sm font-outfit"
+                  disabled={bizLoading}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="biz-email" className="text-sm font-medium text-slate-700 mb-1 block">담당자 이메일</Label>
+              <Input
+                id="biz-email"
+                type="email"
+                value={bizProfile.manager_email}
+                onChange={(e) => setBizProfile((p) => ({ ...p, manager_email: e.target.value }))}
+                placeholder="me@example.com"
+                className="h-9 text-sm font-outfit"
+                disabled={bizLoading}
+              />
+            </div>
+            <div>
+              <Button
+                type="submit"
+                disabled={bizLoading}
+                className="min-h-10 bg-blue-600 hover:bg-blue-700 text-white font-outfit text-sm px-4"
+              >
+                {bizLoading ? "저장 중…" : "저장"}
+              </Button>
+              {bizError && <ErrorMsg message={bizError} />}
+              {bizSuccess && <SuccessMsg message={bizSuccess} />}
+            </div>
+          </form>
         </SettingsCard>
       </div>
     </div>
