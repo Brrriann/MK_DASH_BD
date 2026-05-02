@@ -1,15 +1,18 @@
 import { createBrowserClient } from "@supabase/ssr";
-import type { TaxInvoice } from "@/lib/types";
+import type { TaxInvoice, InvoiceItem } from "@/lib/types";
 
 export type { TaxInvoice };
 
-export type CreateInvoiceInput = {
+export interface CreateInvoiceInput {
   title: string;
-  amount: number;
+  items: InvoiceItem[];
+  supply_amount: number;
+  tax_amount: number;
+  total_amount: number;
   issued_at?: string;
-  pdf_url?: string | null;
+  memo?: string;
   client_id?: string | null;
-};
+}
 
 function getClient() {
   return createBrowserClient(
@@ -42,10 +45,15 @@ export async function createInvoice(data: CreateInvoiceInput): Promise<TaxInvoic
     .from("tax_invoices")
     .insert({
       title: data.title,
-      amount: data.amount,
-      issued_at: data.issued_at ?? new Date().toISOString().split("T")[0],
-      pdf_url: data.pdf_url ?? null,
+      items: data.items,
+      supply_amount: data.supply_amount,
+      tax_amount: data.tax_amount,
+      total_amount: data.total_amount,
+      amount: data.total_amount,  // backward compat
+      issued_at: data.issued_at ?? new Date().toISOString(),
+      memo: data.memo ?? null,
       client_id: data.client_id ?? null,
+      pdf_url: null,
     })
     .select()
     .single();

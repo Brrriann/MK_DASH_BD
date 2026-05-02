@@ -210,3 +210,15 @@ ALTER TABLE clients
   ADD COLUMN IF NOT EXISTS business_address TEXT,
   ADD COLUMN IF NOT EXISTS business_type TEXT,
   ADD COLUMN IF NOT EXISTS business_item TEXT;
+
+-- ----------------------------------------------------------------
+-- 006: 세금계산서 품목 및 금액 필드 추가
+-- ----------------------------------------------------------------
+
+ALTER TABLE tax_invoices
+  ADD COLUMN IF NOT EXISTS items JSONB NOT NULL DEFAULT '[]',
+  ADD COLUMN IF NOT EXISTS supply_amount INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS tax_amount INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_amount INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS memo TEXT,
+  ADD COLUMN IF NOT EXISTS bolta_issuance_key TEXT;

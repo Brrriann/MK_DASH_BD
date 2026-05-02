@@ -68,12 +68,25 @@ export interface MeetingNote {
   updated_at: string;
 }
 
+export interface InvoiceItem {
+  name: string;
+  quantity: number;
+  unit_price: number;
+  supply_amount: number;
+}
+
 export interface TaxInvoice {
   id: string;
   title: string;
+  items: InvoiceItem[];
+  supply_amount: number;
+  tax_amount: number;
+  total_amount: number;
   amount: number;
   issued_at: string;
   pdf_url: string | null;
+  memo: string | null;
+  bolta_issuance_key: string | null;
   client_id: string | null;
   created_at: string;
 }

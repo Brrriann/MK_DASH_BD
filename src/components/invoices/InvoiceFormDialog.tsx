@@ -94,9 +94,18 @@ export function InvoiceFormDialog({
 
     const data: CreateInvoiceInput = {
       title: title.trim(),
-      amount: amountNum,
+      items: [
+        {
+          name: title.trim(),
+          quantity: 1,
+          unit_price: Math.round(amountNum / 1.1),
+          supply_amount: Math.round(amountNum / 1.1),
+        },
+      ],
+      supply_amount: Math.round(amountNum / 1.1),
+      tax_amount: amountNum - Math.round(amountNum / 1.1),
+      total_amount: amountNum,
       issued_at: issuedAt || undefined,
-      pdf_url: pdfUrl.trim() || null,
       client_id: clientId === NONE_VALUE ? null : clientId,
     };
 
