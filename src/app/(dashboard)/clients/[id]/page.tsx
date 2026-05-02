@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   PencilSimple,
   Trash,
-  Buildings,
+  CalendarBlank,
   User,
   EnvelopeSimple,
   Phone,
@@ -93,7 +93,7 @@ export default function ClientDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  async function loadAll() {
+  const loadAll = useCallback(async () => {
     setLoading(true);
     try {
       const [c, p, e, ct, ti, mn] = await Promise.all([
@@ -121,12 +121,11 @@ export default function ClientDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id, router]);
 
   useEffect(() => {
     loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [loadAll]);
 
   async function handleDelete() {
     if (!client) return;
@@ -265,7 +264,7 @@ export default function ClientDetailPage() {
                 </div>
               )}
               <div className="flex items-start gap-2.5">
-                <Buildings size={14} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
+                <CalendarBlank size={14} weight="regular" className="text-slate-400 mt-0.5 shrink-0" />
                 <div>
                   <dt className="text-[10px] text-slate-400 mb-0.5">등록일</dt>
                   <dd className="text-sm text-slate-900">{formatDate(client.created_at)}</dd>
@@ -405,26 +404,28 @@ export default function ClientDetailPage() {
                           </span>
                         )}
                         <div className="hidden group-hover:flex items-center gap-1 shrink-0">
-                          <span
-                            onClick={(e) => { e.stopPropagation(); }}
+                          <button
+                            type="button"
+                            onClick={(e) => e.stopPropagation()}
                             className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
                           >
                             <PencilSimple size={12} weight="regular" />
                             수정
-                          </span>
-                          <span
+                          </button>
+                          <button
+                            type="button"
                             onClick={(e) => handleDeleteNote(note.id, e)}
                             className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-600 hover:bg-red-100 cursor-pointer"
                           >
                             <Trash size={12} weight="regular" />
                             삭제
-                          </span>
+                          </button>
                         </div>
                       </div>
                       <p className="text-xs text-slate-400 mb-1.5">{formatDate(note.met_at)}</p>
                       {note.content && (
                         <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                          {note.content.slice(0, 100)}{note.content.length > 100 ? "..." : ""}
+                          {note.content}
                         </p>
                       )}
                     </Link>
@@ -445,10 +446,10 @@ export default function ClientDetailPage() {
                   </div>
                 ) : (
                   projects.map((project) => (
-                    <Link
+                    // TODO: link to project detail when route exists
+                    <div
                       key={project.id}
-                      href="/projects"
-                      className="block rounded-xl border border-slate-200 bg-white shadow-sm p-4 hover:border-blue-200 hover:shadow-md transition-all cursor-pointer"
+                      className="block rounded-xl border border-slate-200 bg-white shadow-sm p-4"
                     >
                       <div className="flex items-center justify-between gap-3 mb-2">
                         <h3 className="font-outfit font-medium text-slate-900 text-sm">{project.title}</h3>
@@ -465,7 +466,7 @@ export default function ClientDetailPage() {
                         </div>
                         <span className="text-xs text-slate-400 shrink-0">{project.progress}%</span>
                       </div>
-                    </Link>
+                    </div>
                   ))
                 )}
               </div>
