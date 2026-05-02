@@ -1,8 +1,7 @@
 "use client";
 
 import {
-  SquaresFour, Buildings, Kanban, FolderOpen, NotePencil,
-  CurrencyKrw, FileText, Receipt, Sparkle, GearSix
+  SquaresFour, Buildings, CalendarBlank, GearSix
 } from "@phosphor-icons/react";
 import { NavItem } from "./NavItem";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -10,13 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 const NAV_ITEMS = [
   { href: "/", label: "홈", icon: SquaresFour },
   { href: "/clients", label: "클라이언트", icon: Buildings },
-  { href: "/tasks", label: "업무관리", icon: Kanban },
-  { href: "/projects", label: "프로젝트", icon: FolderOpen },
-  { href: "/meetings", label: "미팅노트", icon: NotePencil },
-  { href: "/estimates", label: "견적서", icon: CurrencyKrw },
-  { href: "/contracts", label: "계약서", icon: FileText },
-  { href: "/invoices", label: "세금계산서", icon: Receipt },
-  { href: "/ai", label: "AI 추천", icon: Sparkle },
+  { href: "/schedule", label: "일정관리", icon: CalendarBlank },
 ] as const;
 
 export function Sidebar() {

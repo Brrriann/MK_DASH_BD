@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SquaresFour, Buildings, Kanban, NotePencil, DotsThree } from "@phosphor-icons/react";
+import { SquaresFour, Buildings, CalendarBlank, DotsThree } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/", label: "홈", icon: SquaresFour },
   { href: "/clients", label: "클라이언트", icon: Buildings },
-  { href: "/tasks", label: "업무관리", icon: Kanban },
-  { href: "/meetings", label: "미팅노트", icon: NotePencil },
+  { href: "/schedule", label: "일정관리", icon: CalendarBlank },
 ] as const;
 
 interface MobileBottomNavProps {
