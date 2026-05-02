@@ -5,16 +5,19 @@ import { createClient } from "@/lib/supabase/server";
 const NVIDIA_API_URL =
   "https://integrate.api.nvidia.com/v1/chat/completions";
 
-const SYSTEM_PROMPT = `You are an OCR assistant for Korean business registration certificates (사업자등록증).
-Extract the following fields and return ONLY valid JSON, no other text:
+const SYSTEM_PROMPT = `You are an expert OCR system for Korean business registration certificates (사업자등록증).
+Carefully read ALL text in the image, then extract these exact fields and return ONLY valid JSON with no other text:
 {
-  "business_registration_number": "000-00-00000 format",
-  "representative_name": "대표자명",
-  "business_address": "사업장소재지",
-  "business_type": "업태",
-  "business_item": "종목"
+  "business_registration_number": "사업자등록번호 in 000-00-00000 format",
+  "representative_name": "대표자명 (name of representative)",
+  "business_address": "사업장소재지 (business address)",
+  "business_type": "업태 (type of business)",
+  "business_item": "종목 (business item/category)"
 }
-If a field is not visible, use null.`;
+Rules:
+- Read the document carefully and thoroughly before extracting
+- Use null for any field not clearly visible
+- Return ONLY the JSON object, no markdown, no explanation`;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -54,26 +57,35 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90_000);
+
     const response = await fetch(NVIDIA_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
+      signal: controller.signal,
       body: JSON.stringify({
         model: "meta/llama-3.2-90b-vision-instruct",
         messages: [
+          {
+            role: "system",
+            content: SYSTEM_PROMPT,
+          },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: SYSTEM_PROMPT,
+                text: "Extract all fields from this Korean business registration certificate (사업자등록증).",
               },
               {
                 type: "image_url",
                 image_url: {
                   url: `data:${mimeType};base64,${imageBase64}`,
+                  detail: "high",
                 },
               },
             ],
@@ -84,10 +96,17 @@ export async function POST(req: NextRequest) {
       }),
     });
 
+    clearTimeout(timeout);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("NVIDIA API error:", errorText);
-      return NextResponse.json({ error: "OCR 처리 중 오류가 발생했습니다." }, { status: 502 });
+      console.error("NVIDIA API error:", response.status, errorText);
+      const msg = response.status === 429
+        ? "API 요청 한도 초과. 잠시 후 다시 시도해주세요."
+        : response.status === 401
+        ? "API 키가 유효하지 않습니다."
+        : "OCR 처리 중 오류가 발생했습니다.";
+      return NextResponse.json({ error: msg }, { status: 502 });
     }
 
     const nvidiaResult = await response.json();
@@ -113,6 +132,9 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(extracted);
   } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      return NextResponse.json({ error: "OCR 요청 시간이 초과되었습니다. (90초)" }, { status: 504 });
+    }
     console.error("OCR route error:", err);
     return NextResponse.json({ error: "서버 오류가 발생했습니다." }, { status: 500 });
   }
