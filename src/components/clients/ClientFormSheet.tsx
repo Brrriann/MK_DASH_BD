@@ -334,7 +334,7 @@ export function ClientFormSheet({
             </Label>
             <Select
               value={formData.source ?? ""}
-              onValueChange={(val) => handleChange("source", val)}
+              onValueChange={(val) => handleChange("source", val ?? "")}
             >
               <SelectTrigger className="h-9 text-sm w-full">
                 <SelectValue placeholder="인입경로 선택" />
