@@ -3,13 +3,24 @@ import type { Contract } from "@/lib/types";
 
 export type { Contract };
 
+import type { ContractStatus } from "@/lib/types";
+
 export type CreateContractInput = {
   title: string;
-  status?: "signed" | "pending" | "expired";
+  status?: ContractStatus;
   pdf_url?: string | null;
   client_id?: string | null;
   signed_at?: string | null;
   expires_at?: string | null;
+  contract_amount?: number | null;
+  deposit_amount?: number | null;
+  deposit_paid?: boolean;
+  deposit_paid_at?: string | null;
+  final_amount?: number | null;
+  final_paid?: boolean;
+  final_paid_at?: string | null;
+  terms?: string | null;
+  project_id?: string | null;
 };
 
 function getClient() {
@@ -53,6 +64,15 @@ export async function createContract(data: CreateContractInput): Promise<Contrac
       client_id: data.client_id ?? null,
       signed_at: data.signed_at ?? null,
       expires_at: data.expires_at ?? null,
+      contract_amount: data.contract_amount ?? null,
+      deposit_amount: data.deposit_amount ?? null,
+      deposit_paid: data.deposit_paid ?? false,
+      deposit_paid_at: data.deposit_paid_at ?? null,
+      final_amount: data.final_amount ?? null,
+      final_paid: data.final_paid ?? false,
+      final_paid_at: data.final_paid_at ?? null,
+      terms: data.terms ?? null,
+      project_id: data.project_id ?? null,
     })
     .select()
     .single();

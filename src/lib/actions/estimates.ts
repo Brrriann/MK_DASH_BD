@@ -2,15 +2,24 @@ import { createBrowserClient } from "@supabase/ssr";
 import type { Estimate } from "@/lib/types";
 
 export type { Estimate };
+export type { EstimateItem } from "@/lib/types";
+
+import type { EstimateItem, EstimateStatus } from "@/lib/types";
 
 export type CreateEstimateInput = {
   title: string;
   amount: number;
-  status?: "pending" | "accepted" | "expired";
+  status?: EstimateStatus;
   pdf_url?: string | null;
   client_id?: string | null;
   issued_at?: string;
   expires_at?: string | null;
+  line_items?: EstimateItem[];
+  include_vat?: boolean;
+  discount_amount?: number;
+  deposit_ratio?: number | null;
+  project_id?: string | null;
+  description?: string | null;
 };
 
 function getClient() {
@@ -55,6 +64,12 @@ export async function createEstimate(data: CreateEstimateInput): Promise<Estimat
       client_id: data.client_id ?? null,
       issued_at: data.issued_at ?? new Date().toISOString().split("T")[0],
       expires_at: data.expires_at ?? null,
+      line_items: data.line_items ?? [],
+      include_vat: data.include_vat ?? true,
+      discount_amount: data.discount_amount ?? 0,
+      deposit_ratio: data.deposit_ratio ?? null,
+      project_id: data.project_id ?? null,
+      description: data.description ?? null,
     })
     .select()
     .single();

@@ -1,5 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
-import type { Project, ProjectStatus } from "@/lib/types";
+import type { Project, ProjectStatus, PipelineStage, ServiceType, SourceChannel } from "@/lib/types";
 
 export type CreateProjectInput = {
   title: string;
@@ -7,6 +7,16 @@ export type CreateProjectInput = {
   status?: ProjectStatus;
   progress?: number;
   client_id?: string | null;
+  pipeline_stage?: PipelineStage;
+  service_type?: ServiceType | null;
+  contract_amount?: number | null;
+  deposit_ratio?: number;
+  deposit_paid?: boolean;
+  deposit_paid_at?: string | null;
+  final_paid?: boolean;
+  final_paid_at?: string | null;
+  deadline?: string | null;
+  source_channel?: SourceChannel | null;
 };
 
 function getClient() {
@@ -50,6 +60,16 @@ export async function createProject(data: CreateProjectInput): Promise<Project> 
       status: data.status ?? "active",
       progress: data.progress ?? 0,
       client_id: data.client_id ?? null,
+      pipeline_stage: data.pipeline_stage ?? '상담',
+      service_type: data.service_type ?? null,
+      contract_amount: data.contract_amount ?? null,
+      deposit_ratio: data.deposit_ratio ?? 50,
+      deposit_paid: data.deposit_paid ?? false,
+      deposit_paid_at: data.deposit_paid_at ?? null,
+      final_paid: data.final_paid ?? false,
+      final_paid_at: data.final_paid_at ?? null,
+      deadline: data.deadline ?? null,
+      source_channel: data.source_channel ?? null,
     })
     .select()
     .single();

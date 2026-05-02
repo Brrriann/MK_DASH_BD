@@ -5,6 +5,9 @@ export type MeetingMethod = "in_person" | "video" | "phone" | "email";
 export type EstimateStatus = "pending" | "accepted" | "expired";
 export type ContractStatus = "signed" | "pending" | "expired";
 export type ProjectStatus = "active" | "completed" | "on_hold";
+export type PipelineStage = '상담' | '견적' | '계약' | '계산서발행' | '계약입금' | '착수' | '납품' | '완납';
+export type ServiceType = '명함' | '로고' | '웹사이트' | '쇼핑몰' | '앱' | '광고소재' | 'SNS관리' | '영상편집' | '기타';
+export type SourceChannel = '숨고' | '크몽' | '위시캣' | '라우드소싱' | 'Fiverr' | '직접문의' | '재구매' | '기타';
 
 export interface Client {
   id: string;
@@ -39,6 +42,16 @@ export interface Project {
   status: ProjectStatus;
   progress: number;
   client_id: string | null;
+  pipeline_stage: PipelineStage;
+  service_type: ServiceType | null;
+  contract_amount: number | null;
+  deposit_ratio: number;
+  deposit_paid: boolean;
+  deposit_paid_at: string | null;
+  final_paid: boolean;
+  final_paid_at: string | null;
+  deadline: string | null;
+  source_channel: SourceChannel | null;
   created_at: string;
   updated_at: string;
 }
@@ -88,7 +101,17 @@ export interface TaxInvoice {
   memo: string | null;
   bolta_issuance_key: string | null;
   client_id: string | null;
+  payment_received: boolean;
+  payment_received_at: string | null;
+  project_id: string | null;
   created_at: string;
+}
+
+export interface EstimateItem {
+  name: string;
+  quantity: number;
+  unit_price: number;
+  supply_amount: number;
 }
 
 export interface Estimate {
@@ -100,6 +123,12 @@ export interface Estimate {
   client_id: string | null;
   issued_at: string;
   expires_at: string | null;
+  line_items: EstimateItem[];
+  include_vat: boolean;
+  discount_amount: number;
+  deposit_ratio: number | null;
+  project_id: string | null;
+  description: string | null;
   created_at: string;
 }
 
@@ -111,5 +140,14 @@ export interface Contract {
   client_id: string | null;
   signed_at: string | null;
   expires_at: string | null;
+  contract_amount: number | null;
+  deposit_amount: number | null;
+  deposit_paid: boolean;
+  deposit_paid_at: string | null;
+  final_amount: number | null;
+  final_paid: boolean;
+  final_paid_at: string | null;
+  terms: string | null;
+  project_id: string | null;
   created_at: string;
 }

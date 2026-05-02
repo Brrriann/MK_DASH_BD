@@ -12,6 +12,9 @@ export interface CreateInvoiceInput {
   issued_at?: string;
   memo?: string;
   client_id?: string | null;
+  payment_received?: boolean;
+  payment_received_at?: string | null;
+  project_id?: string | null;
 }
 
 function getClient() {
@@ -54,6 +57,9 @@ export async function createInvoice(data: CreateInvoiceInput): Promise<TaxInvoic
       memo: data.memo ?? null,
       client_id: data.client_id ?? null,
       pdf_url: null,
+      payment_received: data.payment_received ?? false,
+      payment_received_at: data.payment_received_at ?? null,
+      project_id: data.project_id ?? null,
     })
     .select()
     .single();
