@@ -1,5 +1,5 @@
 const NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const MODEL = "moonshotai/kimi-k2-instruct";
+const MODEL = "meta/llama-3.3-70b-instruct";
 
 export interface NvidiaMessage {
   role: "system" | "user" | "assistant";
@@ -35,8 +35,10 @@ export async function callNvidia(
 
     if (!res.ok) {
       const text = await res.text();
-      console.error("NVIDIA API error:", text);
-      throw new Error("AI 서비스 오류가 발생했습니다.");
+      console.error("NVIDIA API error:", res.status, text);
+      let detail = "";
+      try { detail = JSON.parse(text)?.detail ?? JSON.parse(text)?.message ?? text; } catch { detail = text; }
+      throw new Error(`NVIDIA API ${res.status}: ${detail.slice(0, 200)}`);
     }
 
     const data = await res.json();

@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
     ]);
     return NextResponse.json({ content });
   } catch (err) {
-    console.error("meeting-note AI error:", err);
-    return NextResponse.json({ error: "AI 처리 중 오류가 발생했습니다." }, { status: 502 });
+    const msg = err instanceof Error ? err.message : "AI 처리 중 오류가 발생했습니다.";
+    console.error("meeting-note AI error:", msg);
+    return NextResponse.json({ error: msg }, { status: 502 });
   }
 }
