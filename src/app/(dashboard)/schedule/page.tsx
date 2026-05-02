@@ -21,14 +21,14 @@ interface MeetingRow {
   title: string;
   met_at: string;
   client_id: string | null;
-  clients: { company_name: string } | null;
+  clients: { company_name: string }[] | null;
 }
 
 interface ProjectRow {
   id: string;
   title: string;
   client_id: string | null;
-  clients: { company_name: string } | null;
+  clients: { company_name: string }[] | null;
 }
 
 function getSupabase() {
@@ -67,7 +67,7 @@ export default function SchedulePage() {
         title: m.title,
         date: m.met_at,
         type: "meeting" as const,
-        clientName: m.clients?.company_name,
+        clientName: m.clients?.[0]?.company_name,
         clientId: m.client_id ?? undefined,
       }));
 
@@ -77,7 +77,7 @@ export default function SchedulePage() {
         title: p.title,
         date: todayStr,
         type: "project" as const,
-        clientName: p.clients?.company_name,
+        clientName: p.clients?.[0]?.company_name,
         clientId: p.client_id ?? undefined,
       }));
 
