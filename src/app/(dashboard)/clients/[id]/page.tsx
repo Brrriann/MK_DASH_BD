@@ -20,6 +20,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/clients/StatusBadge";
 import { ClientFormSheet } from "@/components/clients/ClientFormSheet";
+import { InvoiceFormDialog } from "@/components/invoices/InvoiceFormDialog";
+import { EstimateFormDialog } from "@/components/estimates/EstimateFormDialog";
+import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import {
   fetchClient,
   fetchClientProjects,
@@ -92,6 +95,9 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [estimateDialogOpen, setEstimateDialogOpen] = useState(false);
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -446,10 +452,10 @@ export default function ClientDetailPage() {
                   </div>
                 ) : (
                   projects.map((project) => (
-                    // TODO: link to project detail when route exists
-                    <div
+                    <Link
                       key={project.id}
-                      className="block rounded-xl border border-slate-200 bg-white shadow-sm p-4"
+                      href={`/projects/${project.id}`}
+                      className="block rounded-xl border border-slate-200 bg-white shadow-sm p-4 hover:border-blue-200 hover:shadow-md transition-all"
                     >
                       <div className="flex items-center justify-between gap-3 mb-2">
                         <h3 className="font-outfit font-medium text-slate-900 text-sm">{project.title}</h3>
@@ -466,7 +472,7 @@ export default function ClientDetailPage() {
                         </div>
                         <span className="text-xs text-slate-400 shrink-0">{project.progress}%</span>
                       </div>
-                    </div>
+                    </Link>
                   ))
                 )}
               </div>
@@ -476,6 +482,22 @@ export default function ClientDetailPage() {
             <TabsContent value="estimates">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-outfit font-semibold text-slate-800 text-sm">견적·계약</h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setEstimateDialogOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 transition-colors"
+                  >
+                    <Plus size={12} weight="regular" />
+                    새 견적서
+                  </button>
+                  <button
+                    onClick={() => setContractDialogOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                  >
+                    <Plus size={12} weight="regular" />
+                    새 계약서
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
@@ -545,6 +567,13 @@ export default function ClientDetailPage() {
             <TabsContent value="tax">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-outfit font-semibold text-slate-800 text-sm">세금계산서</h2>
+                <button
+                  onClick={() => setInvoiceDialogOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 transition-colors"
+                >
+                  <Plus size={12} weight="regular" />
+                  새 세금계산서
+                </button>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 {taxInvoices.length === 0 ? (
@@ -595,6 +624,30 @@ export default function ClientDetailPage() {
         onOpenChange={setEditOpen}
         client={client}
         onSuccess={loadAll}
+      />
+
+      {/* 세금계산서 Dialog */}
+      <InvoiceFormDialog
+        open={invoiceDialogOpen}
+        onClose={() => setInvoiceDialogOpen(false)}
+        clients={client ? [client] : []}
+        onSaved={() => { setInvoiceDialogOpen(false); loadAll(); }}
+      />
+
+      {/* 견적서 Dialog */}
+      <EstimateFormDialog
+        open={estimateDialogOpen}
+        onClose={() => setEstimateDialogOpen(false)}
+        clients={client ? [client] : []}
+        onSaved={() => { setEstimateDialogOpen(false); loadAll(); }}
+      />
+
+      {/* 계약서 Dialog */}
+      <ContractFormDialog
+        open={contractDialogOpen}
+        onClose={() => setContractDialogOpen(false)}
+        clients={client ? [client] : []}
+        onSaved={() => { setContractDialogOpen(false); loadAll(); }}
       />
     </div>
   );

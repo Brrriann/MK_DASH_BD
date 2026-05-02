@@ -150,8 +150,8 @@ export function ClientFormSheet({
 
       onSuccess();
       onOpenChange(false);
-    } catch {
-      setErrors({ general: "저장 중 오류가 발생했습니다. 다시 시도해 주세요." });
+    } catch (err) {
+      setErrors({ general: err instanceof Error ? err.message : "저장 중 오류가 발생했습니다. 다시 시도해 주세요." });
     } finally {
       setSubmitting(false);
     }

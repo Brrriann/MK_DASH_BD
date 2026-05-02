@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, FloppyDisk, LinkSimple } from "@phosphor-icons/react";
+import { ArrowLeft, FloppyDisk, LinkSimple, Sparkle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { upsertMeetingNote, fetchAllAttendees } from "@/lib/actions/meetings";
 import { fetchClients, fetchTasks } from "@/lib/actions/tasks";
@@ -54,6 +54,10 @@ export default function NewMeetingPage() {
   const isDirty = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [aiKeywords, setAiKeywords] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [injectedContent, setInjectedContent] = useState("");
 
   // Load data
   useEffect(() => {
@@ -145,6 +149,25 @@ export default function NewMeetingPage() {
       setSaving(false);
     }
   };
+
+  async function handleAiWrite() {
+    if (!aiKeywords.trim()) return;
+    setAiLoading(true); setAiError("");
+    try {
+      const clientName = clientId ? clients.find(c => c.id === clientId)?.company_name : undefined;
+      const res = await fetch("/api/ai/meeting-note", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keywords: aiKeywords.trim(), clientName, metAt }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setAiError(json.error ?? "AI 오류"); return; }
+      const html = json.content.replace(/\n/g, "<br>");
+      setInjectedContent(html);
+      setContent(html);
+    } catch { setAiError("네트워크 오류가 발생했습니다."); }
+    finally { setAiLoading(false); }
+  }
 
   const toggleTask = (taskId: string) => {
     setLinkedTaskIds((prev) => {
@@ -273,6 +296,30 @@ export default function NewMeetingPage() {
             />
           </div>
 
+          {/* AI 회의록 작성 */}
+          <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
+            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">AI 회의록 작성</p>
+            <textarea
+              value={aiKeywords}
+              onChange={(e) => setAiKeywords(e.target.value)}
+              placeholder={"키워드와 메모를 입력하세요.\n예: 웹사이트 리뉴얼, 디자인 레퍼런스 공유, 다음주까지 와이어프레임 요청"}
+              maxLength={2000}
+              rows={3}
+              className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-outfit"
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-400">{aiKeywords.length}/2,000</span>
+              <button type="button" onClick={handleAiWrite}
+                disabled={aiLoading || !aiKeywords.trim()}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                <Sparkle size={12} />
+                {aiLoading ? "AI 작성 중..." : "AI 회의록 작성"}
+              </button>
+            </div>
+            {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+            {aiLoading && <p className="text-xs text-blue-600 animate-pulse">AI가 회의록을 작성하고 있습니다...</p>}
+          </div>
+
           {/* Linked tasks */}
           {tasks.length > 0 && (
             <div className="space-y-2">
@@ -320,6 +367,7 @@ export default function NewMeetingPage() {
         <div className="space-y-1.5">
           <Label className="text-xs font-medium text-slate-600">미팅 내용</Label>
           <MeetingNoteEditor
+            injectContent={injectedContent || undefined}
             onUpdate={(html) => {
               setContent(html);
               markDirty();

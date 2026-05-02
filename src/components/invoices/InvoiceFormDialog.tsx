@@ -72,8 +72,11 @@ export function InvoiceFormDialog({
   const [issuedAt, setIssuedAt] = useState("");
   const [memo, setMemo] = useState("");
   const [items, setItems] = useState<InvoiceItem[]>([EMPTY_ITEM()]);
+  const [paymentReceived, setPaymentReceived] = useState(false);
+  const [paymentReceivedAt, setPaymentReceivedAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [issuing, setIssuing] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState("");
   const [issuanceSuccess, setIssuanceSuccess] = useState(false);
 
@@ -109,6 +112,8 @@ export function InvoiceFormDialog({
       );
       setMemo(invoice?.memo ?? "");
       setItems(invoice?.items?.length ? invoice.items : [EMPTY_ITEM()]);
+      setPaymentReceived(invoice?.payment_received ?? false);
+      setPaymentReceivedAt(invoice?.payment_received_at ?? "");
       setError("");
       setIssuanceSuccess(false);
       setOcrDone(false);
@@ -222,6 +227,8 @@ export function InvoiceFormDialog({
       issued_at: issuedAt || undefined,
       memo: memo.trim() || undefined,
       client_id: clientId === NONE_VALUE ? null : clientId,
+      payment_received: paymentReceived,
+      payment_received_at: paymentReceived && paymentReceivedAt ? paymentReceivedAt : null,
     };
 
     try {
@@ -238,6 +245,22 @@ export function InvoiceFormDialog({
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handlePdfIssue() {
+    if (!invoice?.id) return;
+    setPdfLoading(true);
+    try {
+      const res = await fetch("/api/pdf/invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoiceId: invoice.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setError(json.error ?? "PDF 생성 오류"); return; }
+      window.open(json.url, "_blank");
+    } catch { setError("PDF 생성 중 오류가 발생했습니다."); }
+    finally { setPdfLoading(false); }
   }
 
   async function handleBoltaIssue() {
@@ -302,6 +325,8 @@ export function InvoiceFormDialog({
         issued_at: issuedAt || undefined,
         memo: memo.trim() || undefined,
         client_id: selectedClient.id,
+        payment_received: paymentReceived,
+        payment_received_at: paymentReceived && paymentReceivedAt ? paymentReceivedAt : null,
       };
       let saved: TaxInvoice;
       if (isEdit && invoice) {
@@ -566,6 +591,22 @@ export function InvoiceFormDialog({
             </div>
           </div>
 
+          {/* 입금 확인 */}
+          <div className="rounded-lg border border-slate-200 p-3 bg-slate-50/50 space-y-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">입금 확인</p>
+            <div className="flex items-center gap-3">
+              <input type="checkbox" id="inv-payment-received" checked={paymentReceived}
+                onChange={(e) => setPaymentReceived(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600" />
+              <Label htmlFor="inv-payment-received" className="text-sm text-slate-700">입금 완료</Label>
+              {paymentReceived && (
+                <input type="date" value={paymentReceivedAt}
+                  onChange={(e) => setPaymentReceivedAt(e.target.value)}
+                  className="h-8 rounded-md border border-slate-200 bg-white px-3 text-xs font-outfit shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600" />
+              )}
+            </div>
+          </div>
+
           {/* 메모 */}
           <div className="flex flex-col gap-1.5">
             <Label
@@ -609,6 +650,11 @@ export function InvoiceFormDialog({
           )}
 
           <DialogFooter className="gap-2 flex-col sm:flex-row">
+            {isEdit && (
+              <Button type="button" onClick={handlePdfIssue} disabled={pdfLoading} variant="outline" className="font-outfit mr-auto">
+                {pdfLoading ? "PDF 생성 중..." : "PDF 서식"}
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"

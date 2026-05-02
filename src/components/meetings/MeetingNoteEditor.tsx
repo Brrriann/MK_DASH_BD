@@ -1,18 +1,21 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
+import { useEffect } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { TextB, ListBullets, ListNumbers, Code } from "@phosphor-icons/react";
 
 interface MeetingNoteEditorProps {
   initialContent?: string;
+  injectContent?: string;
   onUpdate?: (html: string) => void;
   editable?: boolean;
 }
 
 export function MeetingNoteEditor({
   initialContent,
+  injectContent,
   onUpdate,
   editable = true,
 }: MeetingNoteEditorProps) {
@@ -27,6 +30,14 @@ export function MeetingNoteEditor({
       onUpdate?.(editor.getHTML());
     },
   });
+
+  useEffect(() => {
+    if (editor && injectContent) {
+      editor.commands.setContent(injectContent);
+      onUpdate?.(editor.getHTML());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [injectContent]);
 
   if (!editor) return null;
 
