@@ -222,3 +222,68 @@ ALTER TABLE tax_invoices
   ADD COLUMN IF NOT EXISTS total_amount INTEGER NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS memo TEXT,
   ADD COLUMN IF NOT EXISTS bolta_issuance_key TEXT;
+
+
+-- ===== 008: REDESIGN =====
+-- 008_redesign.sql
+-- ?꾨줈?앺듃: 8?④퀎 ?뚯씠?꾨씪??+ ?쒕퉬?ㅼ쑀??+ ?낃툑異붿쟻 + 留덇컧??+ ?좎엯梨꾨꼸
+DO $$ BEGIN
+  CREATE TYPE pipeline_stage AS ENUM (
+    '?곷떞', '寃ъ쟻', '怨꾩빟', '怨꾩궛?쒕컻??, '怨꾩빟?낃툑', '李⑹닔', '?⑺뭹', '?꾨궔'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE service_type AS ENUM (
+    '紐낇븿', '濡쒓퀬', '?뱀궗?댄듃', '?쇳븨紐?, '??, '愿묎퀬?뚯옱', 'SNS愿由?, '?곸긽?몄쭛', '湲고?'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE source_channel AS ENUM (
+    '?④퀬', '?щそ', '?꾩떆罹?, '?쇱슦?쒖냼??, 'Fiverr', '吏곸젒臾몄쓽', '?ш뎄留?, '湲고?'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+ALTER TABLE projects
+  ADD COLUMN IF NOT EXISTS pipeline_stage pipeline_stage NOT NULL DEFAULT '?곷떞',
+  ADD COLUMN IF NOT EXISTS service_type service_type,
+  ADD COLUMN IF NOT EXISTS contract_amount NUMERIC(15,0),
+  ADD COLUMN IF NOT EXISTS deposit_ratio INTEGER DEFAULT 50,
+  ADD COLUMN IF NOT EXISTS deposit_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS deposit_paid_at DATE,
+  ADD COLUMN IF NOT EXISTS final_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS final_paid_at DATE,
+  ADD COLUMN IF NOT EXISTS deadline DATE,
+  ADD COLUMN IF NOT EXISTS source_channel source_channel;
+
+-- 寃ъ쟻?? ?덈ぉ 紐⑸줉 + VAT + ?좎씤 + ?꾨줈?앺듃 ?곌껐
+ALTER TABLE estimates
+  ADD COLUMN IF NOT EXISTS line_items JSONB NOT NULL DEFAULT '[]',
+  ADD COLUMN IF NOT EXISTS include_vat BOOLEAN NOT NULL DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(15,0) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS deposit_ratio INTEGER DEFAULT 50,
+  ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS description TEXT;
+
+-- 怨꾩빟?? ?낃툑異붿쟻 + 怨꾩빟?댁슜 + ?꾨줈?앺듃 ?곌껐
+ALTER TABLE contracts
+  ADD COLUMN IF NOT EXISTS contract_amount NUMERIC(15,0),
+  ADD COLUMN IF NOT EXISTS deposit_amount NUMERIC(15,0),
+  ADD COLUMN IF NOT EXISTS deposit_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS deposit_paid_at DATE,
+  ADD COLUMN IF NOT EXISTS final_amount NUMERIC(15,0),
+  ADD COLUMN IF NOT EXISTS final_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS final_paid_at DATE,
+  ADD COLUMN IF NOT EXISTS terms TEXT,
+  ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL;
+
+-- ?멸툑怨꾩궛?? ?낃툑異붿쟻 + ?꾨줈?앺듃 ?곌껐
+ALTER TABLE tax_invoices
+  ADD COLUMN IF NOT EXISTS payment_received BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS payment_received_at DATE,
+  ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL;
+
