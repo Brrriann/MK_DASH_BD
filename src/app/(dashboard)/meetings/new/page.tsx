@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, FloppyDisk, LinkSimple } from "@phosphor-icons/react";
 import Link from "next/link";
 import { upsertMeetingNote, fetchAllAttendees } from "@/lib/actions/meetings";
@@ -30,10 +30,12 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function NewMeetingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialClientId = searchParams.get("client_id") ?? "";
 
   // Form state
   const [title, setTitle] = useState("");
-  const [clientId, setClientId] = useState<string>("");
+  const [clientId, setClientId] = useState<string>(initialClientId);
   const [metAt, setMetAt] = useState(new Date().toISOString().split("T")[0]);
   const [method, setMethod] = useState<MeetingMethod | null>(null);
   const [attendees, setAttendees] = useState<string[]>([]);
