@@ -3,7 +3,7 @@ export type TaskStatus = "todo" | "in_progress" | "done" | "on_hold";
 export type TaskPriority = "high" | "medium" | "low";
 export type MeetingMethod = "in_person" | "video" | "phone" | "email";
 export type EstimateStatus = "pending" | "accepted" | "expired";
-export type ContractStatus = "signed" | "pending" | "expired";
+export type ContractStatus = "signed" | "pending" | "expired" | "signature_requested";
 export type ProjectStatus = "active" | "completed" | "on_hold";
 export type PipelineStage = '상담' | '견적' | '계약' | '계산서발행' | '계약입금' | '착수' | '납품' | '완납';
 export type ServiceType = '명함' | '로고' | '웹사이트' | '쇼핑몰' | '앱' | '광고소재' | 'SNS관리' | '영상편집' | '기타';
@@ -149,5 +149,13 @@ export interface Contract {
   final_paid_at: string | null;
   terms: string | null;
   project_id: string | null;
+  // e-서명
+  signature_token: string | null;
+  signature_token_expires_at: string | null;
+  signature_token_used_at: string | null;
+  signer_name: string | null;
+  signer_email: string | null;
+  signature_image_url: string | null;
+  signed_pdf_url: string | null;
   created_at: string;
 }

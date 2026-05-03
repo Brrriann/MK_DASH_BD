@@ -21,6 +21,13 @@ export type CreateContractInput = {
   final_paid_at?: string | null;
   terms?: string | null;
   project_id?: string | null;
+  signature_token?: string | null;
+  signature_token_expires_at?: string | null;
+  signature_token_used_at?: string | null;
+  signer_name?: string | null;
+  signer_email?: string | null;
+  signature_image_url?: string | null;
+  signed_pdf_url?: string | null;
 };
 
 function getClient() {
