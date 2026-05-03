@@ -22,7 +22,7 @@ export async function sendSignatureRequest(params: SendSignatureRequestParams) {
     year: "numeric", month: "long", day: "numeric",
   });
 
-  await getResend().emails.send({
+  const { error } = await getResend().emails.send({
     from: FROM,
     to,
     subject: `[서명 요청] ${contractTitle}`,
@@ -43,6 +43,7 @@ export async function sendSignatureRequest(params: SendSignatureRequestParams) {
       </div>
     `,
   });
+  if (error) throw new Error(`Resend error: ${JSON.stringify(error)}`);
 }
 
 export interface SendSignatureCompleteParams {
@@ -62,7 +63,7 @@ export async function sendSignatureComplete(params: SendSignatureCompleteParams)
     hour: "2-digit", minute: "2-digit",
   });
 
-  await getResend().emails.send({
+  const { error: err1 } = await getResend().emails.send({
     from: FROM,
     to: clientEmail,
     subject: `[서명 완료] ${contractTitle}`,
@@ -78,8 +79,9 @@ export async function sendSignatureComplete(params: SendSignatureCompleteParams)
       </div>
     `,
   });
+  if (err1) throw new Error(`Resend error (client): ${JSON.stringify(err1)}`);
 
-  await getResend().emails.send({
+  const { error: err2 } = await getResend().emails.send({
     from: FROM,
     to: ownerEmail,
     subject: `[서명 완료 알림] ${contractTitle}`,
@@ -96,4 +98,5 @@ export async function sendSignatureComplete(params: SendSignatureCompleteParams)
       </div>
     `,
   });
+  if (err2) throw new Error(`Resend error (owner): ${JSON.stringify(err2)}`);
 }
