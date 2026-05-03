@@ -96,7 +96,8 @@ export function SignedContractPdf({
           <View style={S.signParty}>
             <Text style={S.signLabel}>발주처 (갑)</Text>
             <Text style={{ fontWeight: 700 }}>{signerName}</Text>
-            <Image src={signatureBase64} style={S.signImage} alt="" />
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image src={signatureBase64} style={S.signImage} />
             <Text style={{ fontSize: 8, color: "#64748b", marginTop: 4 }}>{signedAt} 서명</Text>
           </View>
           <View style={S.signParty}>
