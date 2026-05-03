@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY!);
+}
 
 const FROM = process.env.RESEND_FROM ?? "onboarding@resend.dev";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -20,7 +22,7 @@ export async function sendSignatureRequest(params: SendSignatureRequestParams) {
     year: "numeric", month: "long", day: "numeric",
   });
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: `[서명 요청] ${contractTitle}`,
@@ -60,7 +62,7 @@ export async function sendSignatureComplete(params: SendSignatureCompleteParams)
     hour: "2-digit", minute: "2-digit",
   });
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: clientEmail,
     subject: `[서명 완료] ${contractTitle}`,
@@ -77,7 +79,7 @@ export async function sendSignatureComplete(params: SendSignatureCompleteParams)
     `,
   });
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: ownerEmail,
     subject: `[서명 완료 알림] ${contractTitle}`,
