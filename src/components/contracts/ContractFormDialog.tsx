@@ -45,6 +45,8 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [sigRequestLoading, setSigRequestLoading] = useState(false);
+  const [sigRequestSent, setSigRequestSent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -66,6 +68,8 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
       setScope("");
       setAiError("");
       setError("");
+      setSigRequestSent(false);
+      setSigRequestLoading(false);
     }
   }, [open, contract]);
 
@@ -91,6 +95,22 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
       setTerms(json.content);
     } catch { setAiError("네트워크 오류가 발생했습니다."); }
     finally { setAiLoading(false); }
+  }
+
+  async function handleSendSignature() {
+    if (!contract?.id) return;
+    setSigRequestLoading(true);
+    try {
+      const res = await fetch("/api/contracts/send-signature", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contractId: contract.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setError(json.error ?? "발송 오류"); return; }
+      setSigRequestSent(true);
+    } catch { setError("네트워크 오류가 발생했습니다."); }
+    finally { setSigRequestLoading(false); }
   }
 
   async function handlePdfIssue() {
@@ -291,6 +311,17 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
             {isEdit && contract?.terms && (
               <Button type="button" onClick={handlePdfIssue} disabled={pdfLoading} variant="outline" className="font-outfit mr-auto">
                 {pdfLoading ? "PDF 생성 중..." : "PDF 발행"}
+              </Button>
+            )}
+            {isEdit && !contract?.signed_at && (
+              <Button
+                type="button"
+                onClick={handleSendSignature}
+                disabled={sigRequestLoading || sigRequestSent}
+                variant="outline"
+                className="font-outfit"
+              >
+                {sigRequestSent ? "✓ 서명 요청 발송됨" : sigRequestLoading ? "발송 중..." : "서명 요청 발송"}
               </Button>
             )}
             <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="font-outfit">취소</Button>
