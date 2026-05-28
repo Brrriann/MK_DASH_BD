@@ -30,7 +30,7 @@ interface LeadsFilterBarProps {
   totalCount: number;
 }
 
-export function LeadsFilterBar({ params, totalCount }: LeadsFilterBarProps) {
+export function LeadsFilterBar({ params }: LeadsFilterBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [search, setSearch] = useState(params.q ?? "");
@@ -49,6 +49,7 @@ export function LeadsFilterBar({ params, totalCount }: LeadsFilterBarProps) {
       router.push(`${pathname}?${sp.toString()}`);
     }, 300);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   function setFilter(key: string, value: string) {

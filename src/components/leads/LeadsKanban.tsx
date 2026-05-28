@@ -19,7 +19,6 @@ import {
   deleteLead,
   convertLeadToClient,
 } from "@/lib/actions/lead-actions";
-import { InteractionFormSheet } from "@/components/interactions/InteractionFormSheet";
 
 const STATUS_COLUMNS: {
   status: LeadStatus;
@@ -431,7 +430,7 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
         </div>
         <p className="text-sm font-medium text-slate-600">리드가 없습니다</p>
         <p className="text-xs text-slate-400 mt-1">
-          우측 상단의 "리드 추가" 버튼으로 첫 리드를 등록하세요
+          우측 상단의 &ldquo;리드 추가&rdquo; 버튼으로 첫 리드를 등록하세요
         </p>
       </div>
     );
