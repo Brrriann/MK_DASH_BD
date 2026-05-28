@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { GearSix } from "@phosphor-icons/react";
+import { GearSix, NotePencil, ChatText, FolderOpen, Scroll, Receipt, FileText, UsersThree } from "@phosphor-icons/react";
 
 const MORE_ITEMS = [
+  { href: "/leads", label: "리드", icon: UsersThree },
+  { href: "/meetings", label: "미팅노트", icon: NotePencil },
+  { href: "/interactions", label: "소통기록", icon: ChatText },
+  { href: "/documents", label: "서류함", icon: FolderOpen },
+  { href: "/estimates", label: "견적서", icon: FileText },
+  { href: "/contracts", label: "계약서", icon: Scroll },
+  { href: "/invoices", label: "세금계산서", icon: Receipt },
   { href: "/settings", label: "설정", icon: GearSix },
 ] as const;
 

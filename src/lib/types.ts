@@ -132,6 +132,40 @@ export interface Estimate {
   created_at: string;
 }
 
+export type InteractionType = 'call' | 'kakao' | 'email' | 'meeting' | 'memo';
+
+export interface Interaction {
+  id: string;
+  lead_id: string | null;
+  client_id: string | null;
+  type: InteractionType;
+  summary: string;
+  content: string | null;
+  occurred_at: string;
+  follow_up_at: string | null;
+  created_at: string;
+}
+
+export type LeadStatus = '신규' | '연락중' | '견적발송' | '계약' | '실패' | '보류';
+export type LeadSource = '숨고' | '크몽' | '위시캣' | '라우드소싱' | 'Fiverr' | '직접문의' | '기타';
+
+export interface Lead {
+  id: string;
+  name: string;
+  company: string | null;
+  phone: string | null;
+  email: string | null;
+  source: LeadSource;
+  status: LeadStatus;
+  service_interest: string | null;
+  budget_estimate: number | null;
+  notes: string | null;
+  follow_up_at: string | null;
+  converted_client_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Contract {
   id: string;
   title: string;
