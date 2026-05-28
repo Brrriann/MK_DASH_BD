@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Routes that do NOT require authentication
-const PUBLIC_PATHS = ["/login", "/portal", "/api"];
+const PUBLIC_PATHS = ["/login", "/portal", "/api", "/auth", "/reset-password"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
@@ -50,11 +50,11 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     });
 
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    // No authenticated user → redirect to login
-    if (!user) {
+    // No session → redirect to login
+    if (!session) {
       return loginRedirect(request);
     }
   } catch {
