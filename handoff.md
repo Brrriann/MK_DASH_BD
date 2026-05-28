@@ -3,54 +3,35 @@
 ## 현재 상태
 
 - **빌드:** Cloudflare Workers 배포 중 (GitHub Actions CI)
-- **로컬 빌드:** `npm run build` 실패 (Windows webpack EISDIR 이슈, pre-existing, Vercel/CF 무관)
-- **배포:** opennextjs-cloudflare + GitHub Actions CI → Cloudflare Workers
+- **로컬 개발:** `npm run dev` — `D:\project\magnatekorea dashboard\` (원본 디렉토리)에서 실행 권장
+- **주의:** worktree 경로(`.claude/worktrees/`)에서 dev 실행 시 Windows UNKNOWN 파일 잠금 에러 간헐 발생
 
-## 최근 완료 작업 (2026-05-03)
+## 최근 완료 작업 (2026-05-28)
 
-### 전자계약서 e-서명 기능 구현 ✅
-스펙: `docs/superpowers/specs/2026-05-03-esign-design.md`
+### 비밀번호 재설정 플로우 구현 ✅
+- `src/app/(auth)/login/page.tsx` — "비밀번호 찾기" 모드 추가 (`resetPasswordForEmail` + `redirectTo: /reset-password`)
+- `src/app/(auth)/reset-password/page.tsx` — 신규 생성, `onAuthStateChange` + `getSession()` 으로 복구 세션 감지
+- `src/app/auth/callback/route.ts` — 신규 생성 (Supabase 기본 redirect 경로 `/auth/callback` 처리)
+- `src/app/api/auth/callback/route.ts` — `?next=` 파라미터 지원, 쿠키를 redirect 응답에 직접 세팅
+- `src/lib/supabase/middleware.ts` — `/reset-password`, `/auth` 공개 경로 추가
 
-**구현된 파일:**
-- `src/app/sign/contract/[token]/page.tsx` — 공개 서명 페이지 (2단계 위자드)
-- `src/app/api/contracts/send-signature/route.ts` — 토큰 생성 + 이메일 발송
-- `src/app/api/contracts/sign/[token]/route.ts` — GET(토큰 검증) + POST(원자적 서명 처리)
-- `src/components/pdf/SignedContractPdf.tsx` — 서명 이미지 포함 PDF
-- `src/lib/resend.ts` — Resend 이메일 유틸리티
-- `supabase/migrations/009_esign_columns.sql` — contracts 테이블 e-서명 컬럼 추가
-- `src/components/contracts/ContractFormDialog.tsx` — "서명 요청 발송" 버튼 추가
+### 미들웨어 성능 개선 ✅
+- `getUser()` → `getSession()` 교체: 매 요청마다 Supabase 서버 네트워크 왕복 제거 → 응답 속도 대폭 개선
 
-## 현재 진행 중: 이메일 발송 디버깅
-
-### 증상
-- UI에 "서명 요청 발송됨" 표시 (API 200 반환)
-- Resend 대시보드에 발송 로그 없음 → 실제 발송 안 됨
-
-### 원인 파악 및 조치
-1. **Resend SDK v2 result 패턴 미처리** → 수정 완료 (34f579c)
-   - `resend.emails.send()` 반환값 `{ data, error }` 에러 체크 추가
-   - 이제 실패 시 UI에 실제 에러 메시지 표시됨
-2. **배포 완료 후 재테스트 필요**
-
-### 다음 세션 시작 시 할 일
-1. 배포 완료 확인 (GitHub Actions 확인)
-2. "서명 요청 발송" 다시 클릭
-3. 에러 메시지 확인:
-   - **에러 메시지 표시됨** → 메시지 내용에 따라 디버그
-   - **또 조용히 성공** → Cloudflare 환경변수 `RESEND_API_KEY` 값 재확인
-4. **Resend 무료 플랜 제한 가능성**: 도메인 미인증 시 가입 이메일로만 발송 가능
-   - resend.com → Domains에서 도메인 추가 필요할 수 있음
+### 기타
+- `next.config.ts` — `outputFileTracingRoot` `experimental` 밖으로 이동 (경고 제거)
+- GitHub CLI 재인증 완료 (`Brrriann`)
+- Supabase Redirect URLs에 `http://localhost:3000/reset-password` 추가됨
 
 ## 알려진 이슈
 
+- **Resend 이메일 발송:** 아직 미테스트 (이전 세션 이슈, 재확인 필요)
 - **Bolta API** (`/api/bolta/issue`): 실제 API 키 테스트 필요
-- **로컬 빌드:** Windows webpack EISDIR (pre-existing)
 - **Supabase 마이그레이션 009**: 적용 완료 여부 확인 필요
+- **Security Definer View** (`public.clients_with_revenue`): SQL 실행 필요 (명령어는 이전 대화 참고)
 
-## 환경변수 (Cloudflare Workers 대시보드에 설정됨)
-```
-RESEND_API_KEY=re_...
-RESEND_FROM=onboarding@resend.dev
-NEXT_PUBLIC_APP_URL=https://...workers.dev
-OWNER_NOTIFICATION_EMAIL=restindry@gmail.com
-```
+## 다음 TODO
+
+1. 비밀번호 재설정 플로우 최종 테스트 (앱 "비밀번호 찾기" → 이메일 → `/reset-password`)
+2. Resend 이메일 발송 재테스트
+3. 프로덕션 배포 후 Cloudflare Workers URL에서도 동일 플로우 확인
