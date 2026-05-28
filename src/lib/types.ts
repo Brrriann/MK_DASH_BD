@@ -8,6 +8,38 @@ export type ProjectStatus = "active" | "completed" | "on_hold";
 export type PipelineStage = '상담' | '견적' | '계약' | '계산서발행' | '계약입금' | '착수' | '납품' | '완납';
 export type ServiceType = '명함' | '로고' | '웹사이트' | '쇼핑몰' | '앱' | '광고소재' | 'SNS관리' | '영상편집' | '기타';
 export type SourceChannel = '숨고' | '크몽' | '위시캣' | '라우드소싱' | 'Fiverr' | '직접문의' | '재구매' | '기타';
+export type LeadStatus = '신규' | '연락중' | '견적발송' | '계약' | '실패' | '보류';
+export type LeadSource = '숨고' | '크몽' | '위시캣' | '라우드소싱' | 'Fiverr' | '직접문의' | '기타';
+export type InteractionType = 'call' | 'kakao' | 'email' | 'meeting' | 'memo';
+
+export interface Lead {
+  id: string;
+  name: string;
+  company: string | null;
+  phone: string | null;
+  email: string | null;
+  source: LeadSource;
+  status: LeadStatus;
+  service_interest: string | null;
+  budget_estimate: number | null;
+  notes: string | null;
+  follow_up_at: string | null;
+  converted_client_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Interaction {
+  id: string;
+  lead_id: string | null;
+  client_id: string | null;
+  type: InteractionType;
+  summary: string;
+  content: string | null;
+  occurred_at: string;
+  follow_up_at: string | null;
+  created_at: string;
+}
 
 export interface Client {
   id: string;
