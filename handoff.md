@@ -4,7 +4,7 @@
 
 - **빌드:** TypeScript 오류 없음, `npm run dev` 정상 (localhost:3000)
 - **아키텍처:** Server Components First — 목록 페이지 전부 async 서버 컴포넌트 + URL 필터
-- **DB:** leads, interactions 테이블 추가 필요 → `supabase/migrations/010_crm.sql` 실행
+- **DB:** leads, interactions 테이블 ✅ 적용 완료 (2026-05-28)
 
 ## 최근 완료 작업 (2026-05-28)
 

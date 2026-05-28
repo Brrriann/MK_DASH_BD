@@ -1,22 +1,27 @@
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { InteractionsFilterBar } from "@/components/interactions/InteractionsFilterBar";
 import { InteractionsList } from "@/components/interactions/InteractionsList";
 import { InteractionFormSheet } from "@/components/interactions/InteractionFormSheet";
 
-async function getInteractions(params: { type?: string; q?: string }) {
-  const supabase = createAdminClient();
-  let query = supabase
-    .from("interactions")
-    .select("*, leads(id,name,company), clients(id,company_name,contact_name)")
-    .order("occurred_at", { ascending: false })
-    .limit(50);
+const getInteractions = unstable_cache(
+  async (params: { type?: string; q?: string }) => {
+    const supabase = createAdminClient();
+    let query = supabase
+      .from("interactions")
+      .select("*, leads(id,name,company), clients(id,company_name,contact_name)")
+      .order("occurred_at", { ascending: false })
+      .limit(50);
 
-  if (params.type && params.type !== "all") query = query.eq("type", params.type);
-  if (params.q) query = query.ilike("summary", `%${params.q}%`);
+    if (params.type && params.type !== "all") query = query.eq("type", params.type);
+    if (params.q) query = query.ilike("summary", `%${params.q}%`);
 
-  const { data } = await query;
-  return data ?? [];
-}
+    const { data } = await query;
+    return data ?? [];
+  },
+  ["interactions-list"],
+  { revalidate: 60, tags: ["interactions"] }
+);
 
 export default async function InteractionsPage({
   searchParams,

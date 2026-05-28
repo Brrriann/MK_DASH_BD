@@ -1,35 +1,36 @@
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LeadsFilterBar } from "@/components/leads/LeadsFilterBar";
 import { LeadsKanban } from "@/components/leads/LeadsKanban";
 import { LeadFormSheet } from "@/components/leads/LeadFormSheet";
 import type { Lead } from "@/lib/types";
 
-async function getLeads(params: {
-  status?: string;
-  source?: string;
-  q?: string;
-}): Promise<Lead[]> {
-  const supabase = createAdminClient();
-  let query = supabase
-    .from("leads")
-    .select("*")
-    .order("created_at", { ascending: false });
+const getLeads = unstable_cache(
+  async (params: { status?: string; source?: string; q?: string }): Promise<Lead[]> => {
+    const supabase = createAdminClient();
+    let query = supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (params.status && params.status !== "all") {
-    query = query.eq("status", params.status);
-  }
-  if (params.source && params.source !== "all") {
-    query = query.eq("source", params.source);
-  }
-  if (params.q) {
-    query = query.or(
-      `name.ilike.%${params.q}%,company.ilike.%${params.q}%,phone.ilike.%${params.q}%`
-    );
-  }
+    if (params.status && params.status !== "all") {
+      query = query.eq("status", params.status);
+    }
+    if (params.source && params.source !== "all") {
+      query = query.eq("source", params.source);
+    }
+    if (params.q) {
+      query = query.or(
+        `name.ilike.%${params.q}%,company.ilike.%${params.q}%,phone.ilike.%${params.q}%`
+      );
+    }
 
-  const { data } = await query;
-  return (data ?? []) as Lead[];
-}
+    const { data } = await query;
+    return (data ?? []) as Lead[];
+  },
+  ["leads-list"],
+  { revalidate: 60, tags: ["leads"] }
+);
 
 export default async function LeadsPage({
   searchParams,
