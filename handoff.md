@@ -2,9 +2,24 @@
 
 ## 현재 상태
 
-- **빌드:** Cloudflare Workers 배포 중 (GitHub Actions CI)
-- **로컬 빌드:** `npm run build` 실패 (Windows webpack EISDIR 이슈, pre-existing, Vercel/CF 무관)
-- **배포:** opennextjs-cloudflare + GitHub Actions CI → Cloudflare Workers
+- **빌드:** TypeScript 오류 없음, `npm run dev` 정상 (localhost:3000)
+- **아키텍처:** Server Components First — 목록 페이지 전부 async 서버 컴포넌트 + URL 필터
+- **DB:** leads, interactions 테이블 추가 필요 → `supabase/migrations/010_crm.sql` 실행
+
+## 최근 완료 작업 (2026-05-28)
+
+### CRM 전면 재설계 ✅ (커밋 fb645d1)
+**신규 모듈:**
+- `/leads` — 리드 관리 (소스/상태 필터, 칸반 뷰, 팔로업 알림)
+- `/interactions` — 소통기록 (통화/카톡/메일/미팅/메모)
+- `/documents` — 서류함 탭 통합 (견적/계약/계산서)
+
+**아키텍처 전환:**
+- 모든 목록 페이지 → Server Component + URL searchParams 필터
+- Server Actions: `lead-actions.ts`, `interaction-actions.ts`
+- 홈 대시보드: 팔로업 배너 + 파이프라인 KPI + 오늘 할일
+
+**네비게이션:** 홈/리드/고객/소통기록/프로젝트/서류함
 
 ## 최근 완료 작업 (2026-05-03)
 
