@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { createProject, updateProject, type CreateProjectInput } from "@/lib/actions/projects";
+import { revalidateProjects } from "@/lib/actions/revalidate";
 import type { Project, ClientWithRevenue, ProjectStatus, PipelineStage, ServiceType, SourceChannel } from "@/lib/types";
 
 const PIPELINE_STAGES: PipelineStage[] = ['상담', '견적', '계약', '계산서발행', '계약입금', '착수', '납품', '완납'];
@@ -97,6 +98,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
       }
       onSaved();
       onClose();
+      revalidateProjects().catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "저장에 실패했습니다.");
     } finally {

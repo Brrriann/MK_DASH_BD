@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { getCachedDashboardData } from "@/lib/queries/dashboard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { KpiCardSkeleton } from "@/components/dashboard/KpiCardSkeleton";
 import { Buildings, Kanban, Receipt, Warning, CalendarBlank, ArrowRight } from "@phosphor-icons/react/ssr";
@@ -30,35 +30,18 @@ const CHANNEL_LABEL: Record<SourceChannel, string> = {
 };
 
 async function DashboardData() {
-  const supabase = await createClient();
-  const today = new Date().toISOString().split("T")[0];
-  const sevenDaysLater = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+  const {
+    activeClientCount,
+    projects: projectsRaw,
+    recentInvoiceCount,
+    unpaidContracts,
+    unpaidInvoices,
+    recentMeetings,
+    today,
+    sevenDaysLater,
+  } = await getCachedDashboardData();
 
-  const [
-    { count: activeClientCount },
-    { data: projects },
-    { count: recentInvoiceCount },
-    { data: unpaidContracts },
-    { data: unpaidInvoices },
-    { data: recentMeetings },
-  ] = await Promise.all([
-    supabase.from("clients").select("*", { count: "exact", head: true }).eq("status", "active"),
-    supabase.from("projects").select("id,title,pipeline_stage,deadline,deposit_paid,final_paid,source_channel,contract_amount"),
-    supabase.from("tax_invoices").select("*", { count: "exact", head: true }).gte("issued_at", thirtyDaysAgo),
-    supabase.from("contracts")
-      .select("id,title,deposit_paid,final_paid,deposit_amount,final_amount,clients(company_name)")
-      .or("deposit_paid.eq.false,final_paid.eq.false")
-      .limit(5),
-    supabase.from("tax_invoices")
-      .select("id,title,total_amount,issued_at,clients(company_name)")
-      .eq("payment_received", false)
-      .order("issued_at", { ascending: true })
-      .limit(5),
-    supabase.from("meeting_notes").select("id,title,met_at").order("met_at", { ascending: false }).limit(4),
-  ]);
-
-  const allProjects = (projects ?? []) as {
+  const allProjects = projectsRaw as {
     id: string; title: string; pipeline_stage: PipelineStage;
     deadline: string | null; deposit_paid: boolean; final_paid: boolean;
     source_channel: SourceChannel | null; contract_amount: number | null;
@@ -82,12 +65,12 @@ async function DashboardData() {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 4) as [SourceChannel, number][];
 
-  const unpaidContractsList = (unpaidContracts ?? []) as {
+  const unpaidContractsList = unpaidContracts as {
     id: string; title: string; deposit_paid: boolean; final_paid: boolean;
     deposit_amount: number | null; final_amount: number | null;
     clients: { company_name: string } | { company_name: string }[] | null;
   }[];
-  const unpaidInvoicesList = (unpaidInvoices ?? []) as {
+  const unpaidInvoicesList = unpaidInvoices as {
     id: string; title: string; total_amount: number; issued_at: string;
     clients: { company_name: string } | { company_name: string }[] | null;
   }[];
