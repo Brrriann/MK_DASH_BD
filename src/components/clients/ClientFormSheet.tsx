@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient, updateClient, type CreateClientInput } from "@/lib/actions/clients";
+import { revalidateClients } from "@/lib/actions/revalidate";
 import type { Client, ClientStatus } from "@/lib/types";
 
 interface ClientFormSheetProps {
@@ -150,6 +151,7 @@ export function ClientFormSheet({
 
       onSuccess();
       onOpenChange(false);
+      revalidateClients().catch(() => {});
     } catch (err) {
       setErrors({ general: err instanceof Error ? err.message : "저장 중 오류가 발생했습니다. 다시 시도해 주세요." });
     } finally {

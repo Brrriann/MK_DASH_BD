@@ -74,7 +74,8 @@ export function ClientsFilterBar({ params }: ClientsFilterBarProps) {
     router.push(buildUrl({ status: status === "all" ? undefined : status }));
   }
 
-  function handleSortChange(sort: string) {
+  function handleSortChange(sort: string | null) {
+    if (!sort) return;
     router.push(buildUrl({ sort: sort === "name" ? undefined : sort }));
   }
 

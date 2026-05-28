@@ -1,18 +1,17 @@
 "use client";
 
 import {
-  SquaresFour, Buildings, Kanban, NotePencil, ChatText, FolderOpen, GearSix, UsersThree
+  SquaresFour, FunnelSimple, Buildings, ChatCircleDots, Kanban, FolderOpen, GearSix
 } from "@phosphor-icons/react";
 import { NavItem } from "./NavItem";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const NAV_ITEMS = [
   { href: "/", label: "홈", icon: SquaresFour },
-  { href: "/leads", label: "리드", icon: UsersThree },
-  { href: "/clients", label: "클라이언트", icon: Buildings },
+  { href: "/leads", label: "리드", icon: FunnelSimple },
+  { href: "/clients", label: "고객", icon: Buildings },
+  { href: "/interactions", label: "소통기록", icon: ChatCircleDots },
   { href: "/projects", label: "프로젝트", icon: Kanban },
-  { href: "/meetings", label: "미팅노트", icon: NotePencil },
-  { href: "/interactions", label: "소통기록", icon: ChatText },
   { href: "/documents", label: "서류함", icon: FolderOpen },
 ] as const;
 

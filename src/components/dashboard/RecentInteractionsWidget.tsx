@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Phone, ChatDots, EnvelopeSimple, Users, Note } from "@phosphor-icons/react";
+import { Phone, ChatDots, EnvelopeSimple, Users, Note, type Icon } from "@phosphor-icons/react";
 import type { InteractionType } from "@/lib/types";
 
 interface InteractionLead {
@@ -27,10 +27,7 @@ interface RecentInteractionsWidgetProps {
   interactions: RecentInteraction[];
 }
 
-const TYPE_META: Record<
-  InteractionType,
-  { icon: React.ComponentType<{ size: number; weight: string; className?: string }>; label: string; bg: string; color: string }
-> = {
+const TYPE_META: Record<InteractionType, { icon: Icon; label: string; bg: string; color: string }> = {
   call: { icon: Phone, label: "전화", bg: "bg-blue-50", color: "text-blue-600" },
   kakao: { icon: ChatDots, label: "카카오", bg: "bg-yellow-50", color: "text-yellow-600" },
   email: { icon: EnvelopeSimple, label: "이메일", bg: "bg-violet-50", color: "text-violet-600" },
