@@ -17,8 +17,7 @@ import {
 import type { Lead } from "@/lib/types";
 
 const SERVICE_TYPES = [
-  "명함", "로고", "웹사이트", "쇼핑몰", "앱",
-  "광고소재", "SNS관리", "영상편집", "기타",
+  "웹개발", "앱개발", "소프트웨어개발", "디자인", "영상", "강의/컨설팅", "기타",
 ];
 
 interface ConvertLeadDialogProps {
