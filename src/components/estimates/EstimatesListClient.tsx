@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Plus, FilePdf, PaperPlaneTilt, Trash } from "@phosphor-icons/react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { FileText } from "@phosphor-icons/react";
 import { formatKRW, formatDate } from "@/lib/utils";
@@ -38,10 +40,13 @@ function StatusBadge({ status }: { status: EstimateStatus }) {
 }
 
 export function EstimatesListClient({ initialEstimates, clientOptions }: EstimatesListClientProps) {
-  const router = useRouter();
   const [estimates, setEstimates] = useState(initialEstimates);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
+  // 이메일 작성 다이얼로그
+  const [composeId, setComposeId] = useState<string | null>(null);
+  const [composeSubject, setComposeSubject] = useState("");
+  const [composeBody, setComposeBody] = useState("");
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [sendMsg, setSendMsg] = useState<{ id: string; msg: string; ok: boolean } | null>(null);
 
@@ -52,6 +57,19 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
   });
 
   const totalAmount = filtered.reduce((s, e) => s + e.amount, 0);
+
+  function openCompose(estimate: Estimate & { client_name?: string | null }) {
+    setComposeId(estimate.id);
+    setComposeSubject(`[견적서] ${estimate.title}`);
+    setComposeBody("");
+    setSendMsg(null);
+  }
+
+  function closeCompose() {
+    setComposeId(null);
+    setComposeSubject("");
+    setComposeBody("");
+  }
 
   async function handleStatusChange(id: string, newStatus: string) {
     const res = await fetch(`/api/estimates/${id}`, {
@@ -69,7 +87,14 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
   async function handleSendEmail(id: string) {
     setSendingId(id);
     setSendMsg(null);
-    const res = await fetch(`/api/estimates/${id}/send`, { method: "POST" });
+    const res = await fetch(`/api/estimates/${id}/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subject: composeSubject.trim() || undefined,
+        body: composeBody.trim() || undefined,
+      }),
+    });
     const json = await res.json() as { ok?: boolean; error?: string };
     setSendingId(null);
     if (res.ok) {
@@ -77,10 +102,11 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
       setEstimates(prev =>
         prev.map(e => e.id === id && e.status === "expired" ? { ...e, status: "pending" } : e)
       );
+      closeCompose();
     } else {
       setSendMsg({ id, msg: json.error ?? "발송 실패", ok: false });
     }
-    setTimeout(() => setSendMsg(null), 4000);
+    setTimeout(() => setSendMsg(prev => prev?.id === id ? null : prev), 5000);
   }
 
   async function handleDelete(estimate: Estimate & { client_name?: string | null }) {
@@ -204,12 +230,10 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
                 <div className="flex items-center gap-1 mt-3 pt-3 border-t border-slate-100">
                   {estimate.client_id && (
                     <button
-                      onClick={() => handleSendEmail(estimate.id)}
-                      disabled={sendingId === estimate.id}
-                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 min-h-[36px] px-2 disabled:opacity-50 transition-colors"
+                      onClick={() => openCompose(estimate)}
+                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 min-h-[36px] px-2 transition-colors"
                     >
-                      <PaperPlaneTilt size={14} weight="regular" />
-                      {sendingId === estimate.id ? "발송 중..." : "이메일 발송"}
+                      <PaperPlaneTilt size={14} weight="regular" />이메일 발송
                     </button>
                   )}
                   <button
@@ -219,9 +243,6 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
                     <Trash size={14} weight="regular" />삭제
                   </button>
                 </div>
-                {sendMsg?.id === estimate.id && (
-                  <p className={`text-xs mt-1 ${sendMsg.ok ? "text-emerald-600" : "text-red-500"}`}>{sendMsg.msg}</p>
-                )}
               </div>
             ))}
           </div>
@@ -282,10 +303,9 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
                       <div className="flex items-center justify-end gap-1">
                         {estimate.client_id && (
                           <button
-                            onClick={() => handleSendEmail(estimate.id)}
-                            disabled={sendingId === estimate.id}
+                            onClick={() => openCompose(estimate)}
                             title="이메일 발송"
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
                           >
                             <PaperPlaneTilt size={16} weight="regular" />
                           </button>
@@ -298,9 +318,6 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
                           <Trash size={16} weight="regular" />
                         </button>
                       </div>
-                      {sendMsg?.id === estimate.id && (
-                        <p className={`text-xs mt-0.5 text-right ${sendMsg.ok ? "text-emerald-600" : "text-red-500"}`}>{sendMsg.msg}</p>
-                      )}
                     </td>
                   </tr>
                 ))}
@@ -309,6 +326,88 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
           </div>
         </>
       )}
+
+      {/* 이메일 작성 다이얼로그 */}
+      <Dialog open={composeId !== null} onOpenChange={open => { if (!open) closeCompose(); }}>
+        <DialogContent className="font-outfit sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-outfit text-base font-bold text-slate-900">
+              이메일 발송
+            </DialogTitle>
+          </DialogHeader>
+
+          {composeId && (() => {
+            const est = estimates.find(e => e.id === composeId);
+            if (!est) return null;
+            return (
+              <div className="space-y-4 mt-1">
+                {/* 수신자 */}
+                <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2.5 text-sm text-slate-600">
+                  <span className="text-xs font-medium text-slate-400 mr-2">수신</span>
+                  {est.client_name ?? "고객"}
+                </div>
+
+                {/* 이메일 제목 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-600">이메일 제목</label>
+                  <input
+                    value={composeSubject}
+                    onChange={e => setComposeSubject(e.target.value)}
+                    placeholder={`[견적서] ${est.title}`}
+                    maxLength={200}
+                    className="w-full h-9 rounded-lg border border-slate-200 px-3 text-sm font-outfit text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+
+                {/* 이메일 본문 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-600">이메일 본문</label>
+                  <textarea
+                    value={composeBody}
+                    onChange={e => setComposeBody(e.target.value)}
+                    placeholder={`${est.client_name ?? "고객"} 님,\n\n안녕하세요. 요청하신 견적서를 보내드립니다.\n첨부된 견적서를 확인해 주세요.\n\n감사합니다.`}
+                    maxLength={2000}
+                    rows={7}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-outfit text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none leading-relaxed"
+                  />
+                  <p className="text-xs text-slate-400 flex items-center justify-between">
+                    <span>이메일 하단에 견적 금액·유효기한{est.pdf_url ? "·PDF 링크" : ""}가 자동 포함됩니다</span>
+                    <span>{composeBody.length}/2,000</span>
+                  </p>
+                </div>
+
+                {sendMsg?.id === composeId && (
+                  <p className={`text-sm px-3 py-2 rounded-lg border ${
+                    sendMsg.ok
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                      : "bg-red-50 border-red-100 text-red-600"
+                  }`}>{sendMsg.msg}</p>
+                )}
+
+                <div className="flex gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={closeCompose}
+                    disabled={sendingId === composeId}
+                    className="flex-1 h-10 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSendEmail(composeId)}
+                    disabled={sendingId === composeId}
+                    className="flex-1 h-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  >
+                    <PaperPlaneTilt size={15} weight="regular" />
+                    {sendingId === composeId ? "발송 중..." : "발송"}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

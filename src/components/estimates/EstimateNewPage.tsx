@@ -26,6 +26,8 @@ export function EstimateNewPage({ clients }: EstimateNewPageProps) {
   const [pdfUrl, setPdfUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [sendEmail, setSendEmail] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -82,7 +84,14 @@ export function EstimateNewPage({ clients }: EstimateNewPageProps) {
 
     // 3. Send email if requested
     if (sendEmail && createJson.id) {
-      const sendRes = await fetch(`/api/estimates/${createJson.id}/send`, { method: "POST" });
+      const sendRes = await fetch(`/api/estimates/${createJson.id}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: emailSubject.trim() || undefined,
+          body: emailBody.trim() || undefined,
+        }),
+      });
       if (!sendRes.ok) {
         const sendJson = await sendRes.json() as { error?: string };
         setError(`저장은 완료됐지만 이메일 발송에 실패했습니다: ${sendJson.error ?? "오류"}`);
@@ -116,7 +125,13 @@ export function EstimateNewPage({ clients }: EstimateNewPageProps) {
           </label>
           <input
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={e => {
+              setTitle(e.target.value);
+              // 이메일 제목 기본값 자동 동기화 (사용자가 직접 수정하지 않은 경우)
+              if (!emailSubject || emailSubject === `[견적서] ${title}`) {
+                setEmailSubject(`[견적서] ${e.target.value}`);
+              }
+            }}
             placeholder="예: 홈페이지 제작 견적서 v1"
             maxLength={200}
             className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm font-outfit text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -251,7 +266,9 @@ export function EstimateNewPage({ clients }: EstimateNewPageProps) {
 
         {/* 이메일 발송 옵션 */}
         {clientId !== NONE && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className={`rounded-xl border p-4 space-y-4 transition-colors ${
+            sendEmail ? "border-blue-200 bg-blue-50/40" : "border-slate-200 bg-slate-50/50"
+          }`}>
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -263,11 +280,45 @@ export function EstimateNewPage({ clients }: EstimateNewPageProps) {
                 <p className="text-sm font-medium text-slate-800">저장 후 바로 이메일 발송</p>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {selectedClient?.email
-                    ? `${selectedClient.email} 으로 견적서를 발송합니다`
+                    ? `수신: ${selectedClient.email}`
                     : "고객에게 이메일로 견적서를 발송합니다"}
                 </p>
               </div>
             </label>
+
+            {sendEmail && (
+              <div className="space-y-3 pt-1 border-t border-blue-100">
+                {/* 이메일 제목 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-600">이메일 제목</label>
+                  <input
+                    value={emailSubject}
+                    onChange={e => setEmailSubject(e.target.value)}
+                    placeholder={`[견적서] ${title || "제목"}`}
+                    maxLength={200}
+                    className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm font-outfit text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+
+                {/* 이메일 본문 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-600">이메일 본문</label>
+                  <textarea
+                    value={emailBody}
+                    onChange={e => setEmailBody(e.target.value)}
+                    placeholder={`${selectedClient?.contact_name ?? "고객"} 님,\n\n안녕하세요. 요청하신 견적서를 보내드립니다.\n첨부된 견적서를 확인해 주세요.\n\n감사합니다.`}
+                    maxLength={2000}
+                    rows={6}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-outfit text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none leading-relaxed"
+                  />
+                  <p className="text-xs text-slate-400 text-right">{emailBody.length}/2,000</p>
+                </div>
+                <p className="text-xs text-slate-400">
+                  📋 이메일 하단에 견적서 제목·금액·유효기한이 자동으로 포함됩니다
+                  {(pdfMode === "upload" && file) || (pdfMode === "url" && pdfUrl.trim()) ? " · PDF 링크도 포함됩니다" : ""}
+                </p>
+              </div>
+            )}
           </div>
         )}
 

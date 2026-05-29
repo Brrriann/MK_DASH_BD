@@ -54,36 +54,44 @@ export interface SendEstimateParams {
   amount: number;
   issuedAt: string;
   expiresAt: string | null;
+  customSubject?: string;
+  customBody?: string;
 }
 
 export async function sendEstimate(params: SendEstimateParams) {
-  const { to, recipientName, estimateTitle, pdfUrl, amount, issuedAt, expiresAt } = params;
+  const {
+    to, recipientName, estimateTitle, pdfUrl, amount,
+    issuedAt, expiresAt, customSubject, customBody,
+  } = params;
 
   const formatAmount = (n: number) =>
     n.toLocaleString("ko-KR") + "원";
-  const formatDate = (s: string) =>
+  const formatKrDate = (s: string) =>
     new Date(s).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+
+  const subject = customSubject?.trim() || `[견적서] ${estimateTitle}`;
 
   const pdfSection = pdfUrl
     ? `<a href="${pdfUrl}" style="display:inline-block;background:#2563eb;color:white;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:600;margin:16px 0;">📄 견적서 확인하기</a>`
     : "";
 
+  // 본문: 사용자 작성 내용을 줄바꿈 → <br> 변환
+  const bodyHtml = customBody?.trim()
+    ? customBody.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>")
+    : `${recipientName} 님,<br/><strong>${estimateTitle}</strong>에 대한 견적서를 보내드립니다.`;
+
   const { error } = await getResend().emails.send({
     from: FROM,
     to,
-    subject: `[견적서] ${estimateTitle}`,
+    subject,
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
-        <h2 style="font-size:16px;color:#0f172a;margin-bottom:8px;">📋 견적서를 보내드립니다</h2>
-        <p style="color:#475569;font-size:14px;line-height:1.7;">
-          ${recipientName} 님,<br/>
-          <strong>${estimateTitle}</strong>에 대한 견적서를 보내드립니다.
-        </p>
+        <p style="color:#0f172a;font-size:14px;line-height:1.9;margin-bottom:16px;">${bodyHtml}</p>
         ${pdfSection}
         <div style="background:#f8fafc;border-radius:6px;padding:12px;font-size:13px;color:#64748b;margin-top:8px;">
           📋 ${estimateTitle}<br/>
           💰 견적 금액: <strong style="color:#0f172a;">${formatAmount(amount)}</strong><br/>
-          📅 발행일: ${formatDate(issuedAt)}${expiresAt ? `<br/>⏰ 유효 기한: ${formatDate(expiresAt)}` : ""}
+          📅 발행일: ${formatKrDate(issuedAt)}${expiresAt ? `<br/>⏰ 유효 기한: ${formatKrDate(expiresAt)}` : ""}
         </div>
         <p style="font-size:12px;color:#94a3b8;margin-top:20px;">
           문의 사항이 있으시면 언제든지 연락 주세요.
