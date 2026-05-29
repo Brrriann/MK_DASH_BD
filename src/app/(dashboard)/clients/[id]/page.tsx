@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Plus,
   FilePdf,
+  ChatTeardropText,
 } from "@phosphor-icons/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,13 +30,12 @@ import {
   fetchClientEstimates,
   fetchClientContracts,
   fetchClientTaxInvoices,
-  fetchClientMeetingNotes,
   deleteClient,
   type Estimate,
   type Contract,
 } from "@/lib/actions/clients";
-import { deleteMeetingNote } from "@/lib/actions/meetings";
-import type { ClientWithRevenue, Project, MeetingNote, TaxInvoice } from "@/lib/types";
+import { fetchClientInteractionsAction } from "@/lib/actions/client-actions";
+import type { ClientWithRevenue, Project, Interaction, TaxInvoice } from "@/lib/types";
 import { formatKRW, formatDate } from "@/lib/utils";
 
 const projectStatusLabel: Record<string, string> = {
@@ -74,11 +74,12 @@ const contractStatusClass: Record<string, string> = {
   expired: "bg-slate-100 text-slate-500 border border-slate-200",
 };
 
-const methodLabel: Record<string, string> = {
-  in_person: "대면",
-  video: "화상",
-  phone: "전화",
-  email: "이메일",
+const INTERACTION_TYPE_CONFIG: Record<string, { label: string; emoji: string; bg: string; text: string }> = {
+  call:    { label: "통화",   emoji: "📞", bg: "bg-blue-50",   text: "text-blue-700" },
+  kakao:   { label: "카톡",   emoji: "💬", bg: "bg-yellow-50", text: "text-yellow-700" },
+  email:   { label: "이메일", emoji: "✉️", bg: "bg-violet-50", text: "text-violet-700" },
+  meeting: { label: "미팅",   emoji: "👥", bg: "bg-green-50",  text: "text-green-700" },
+  memo:    { label: "메모",   emoji: "📝", bg: "bg-slate-100", text: "text-slate-600" },
 };
 
 export default function ClientDetailPage() {
@@ -91,7 +92,7 @@ export default function ClientDetailPage() {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [taxInvoices, setTaxInvoices] = useState<TaxInvoice[]>([]);
-  const [meetingNotes, setMeetingNotes] = useState<MeetingNote[]>([]);
+  const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -102,13 +103,13 @@ export default function ClientDetailPage() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [c, p, e, ct, ti, mn] = await Promise.all([
+      const [c, p, e, ct, ti, interactions] = await Promise.all([
         fetchClient(id),
         fetchClientProjects(id),
         fetchClientEstimates(id),
         fetchClientContracts(id),
         fetchClientTaxInvoices(id),
-        fetchClientMeetingNotes(id),
+        fetchClientInteractionsAction(id),
       ]);
 
       if (!c) {
@@ -121,7 +122,7 @@ export default function ClientDetailPage() {
       setEstimates(e);
       setContracts(ct);
       setTaxInvoices(ti);
-      setMeetingNotes(mn);
+      setInteractions(interactions);
     } catch {
       router.replace("/clients");
     } finally {
@@ -147,18 +148,6 @@ export default function ClientDetailPage() {
     } catch {
       alert("삭제 중 오류가 발생했습니다.");
       setDeleting(false);
-    }
-  }
-
-  async function handleDeleteNote(noteId: string, e: React.MouseEvent) {
-    e.preventDefault();
-    const confirmed = window.confirm("이 미팅노트를 삭제하시겠습니까?");
-    if (!confirmed) return;
-    try {
-      await deleteMeetingNote(noteId);
-      setMeetingNotes((prev) => prev.filter((n) => n.id !== noteId));
-    } catch {
-      alert("삭제 중 오류가 발생했습니다.");
     }
   }
 
@@ -335,13 +324,13 @@ export default function ClientDetailPage() {
 
         {/* RIGHT PANEL */}
         <div className="min-w-0">
-          <Tabs defaultValue="meeting-notes">
+          <Tabs defaultValue="interactions">
             <TabsList className="w-full justify-start mb-5 flex-wrap">
-              <TabsTrigger value="meeting-notes">
-                미팅노트
-                {meetingNotes.length > 0 && (
+              <TabsTrigger value="interactions">
+                소통기록
+                {interactions.length > 0 && (
                   <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-100 text-blue-600 text-[10px] font-semibold">
-                    {meetingNotes.length}
+                    {interactions.length}
                   </span>
                 )}
               </TabsTrigger>
@@ -371,71 +360,61 @@ export default function ClientDetailPage() {
               </TabsTrigger>
             </TabsList>
 
-            {/* 미팅노트 Tab */}
-            <TabsContent value="meeting-notes">
+            {/* 소통기록 Tab */}
+            <TabsContent value="interactions">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-outfit font-semibold text-slate-800 text-sm">미팅노트</h2>
+                <h2 className="font-outfit font-semibold text-slate-800 text-sm">소통기록</h2>
                 <Link
-                  href={`/meetings/new?client_id=${id}`}
+                  href="/interactions"
                   className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 transition-colors"
                 >
-                  <Plus size={12} weight="regular" />
-                  새 미팅노트
+                  <ChatTeardropText size={12} weight="regular" />
+                  소통기록 추가
                 </Link>
               </div>
-              <div className="space-y-3">
-                {meetingNotes.length === 0 ? (
+              <div className="space-y-2">
+                {interactions.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center">
-                    <p className="text-sm text-slate-400">기록된 미팅노트가 없습니다.</p>
+                    <p className="text-sm text-slate-400">기록된 소통이 없습니다.</p>
                     <Link
-                      href={`/meetings/new?client_id=${id}`}
+                      href="/interactions"
                       className="mt-3 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700"
                     >
                       <Plus size={12} weight="regular" />
-                      첫 미팅노트 작성하기
+                      첫 소통 기록하기
                     </Link>
                   </div>
                 ) : (
-                  meetingNotes.map((note) => (
-                    <Link
-                      key={note.id}
-                      href={`/meetings/${note.id}`}
-                      className="group block rounded-xl border border-slate-200 bg-white shadow-sm p-4 hover:border-blue-200 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-start justify-between gap-3 mb-1.5">
-                        <h3 className="font-outfit font-medium text-slate-900 text-sm">{note.title}</h3>
-                        {note.method && (
-                          <span className="group-hover:hidden inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
-                            {methodLabel[note.method] ?? note.method}
-                          </span>
-                        )}
-                        <div className="hidden group-hover:flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
-                          >
-                            <PencilSimple size={12} weight="regular" />
-                            수정
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => handleDeleteNote(note.id, e)}
-                            className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-600 hover:bg-red-100 cursor-pointer"
-                          >
-                            <Trash size={12} weight="regular" />
-                            삭제
-                          </button>
+                  interactions.map((item) => {
+                    const cfg = INTERACTION_TYPE_CONFIG[item.type] ?? INTERACTION_TYPE_CONFIG.memo;
+                    return (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 hover:border-slate-300 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-1.5">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium shrink-0 ${cfg.bg} ${cfg.text}`}>
+                              {cfg.emoji} {cfg.label}
+                            </span>
+                            <p className="text-sm font-medium text-slate-900 truncate">{item.summary}</p>
+                          </div>
+                          <p className="text-xs text-slate-400 shrink-0">{formatDate(item.occurred_at)}</p>
                         </div>
+                        {item.content && (
+                          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed ml-1 mt-1">
+                            {item.content}
+                          </p>
+                        )}
+                        {item.follow_up_at && (
+                          <p className="mt-1.5 text-xs text-blue-600 flex items-center gap-1">
+                            <CalendarBlank size={11} weight="regular" />
+                            팔로업: {formatDate(item.follow_up_at)}
+                          </p>
+                        )}
                       </div>
-                      <p className="text-xs text-slate-400 mb-1.5">{formatDate(note.met_at)}</p>
-                      {note.content && (
-                        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                          {note.content}
-                        </p>
-                      )}
-                    </Link>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </TabsContent>

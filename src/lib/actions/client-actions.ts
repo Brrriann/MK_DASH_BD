@@ -2,7 +2,7 @@
 
 import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Client, ClientWithRevenue } from "@/lib/types";
+import type { Client, ClientWithRevenue, Interaction } from "@/lib/types";
 
 export async function fetchClientsAction(): Promise<ClientWithRevenue[]> {
   const supabase = createAdminClient();
@@ -12,6 +12,17 @@ export async function fetchClientsAction(): Promise<ClientWithRevenue[]> {
     .order("company_name", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as ClientWithRevenue[];
+}
+
+export async function fetchClientInteractionsAction(clientId: string): Promise<Interaction[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("interactions")
+    .select("*")
+    .eq("client_id", clientId)
+    .order("occurred_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Interaction[];
 }
 
 export interface ClientInput {
