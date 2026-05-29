@@ -18,7 +18,7 @@ const NAV_ITEMS = [
 export function Sidebar() {
   return (
     <TooltipProvider>
-      <aside className="fixed inset-y-0 left-0 z-30 flex flex-col bg-sidebar-bg border-r border-slate-800 w-16 lg:w-60">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden md:flex flex-col bg-sidebar-bg border-r border-slate-800 w-16 lg:w-60">
         {/* 데스크톱: 240px */}
         <div className="hidden lg:flex flex-col h-full py-5">
           <div className="px-4 mb-6">

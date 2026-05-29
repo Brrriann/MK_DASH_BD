@@ -489,6 +489,27 @@ export default function ProjectDetailPage() {
     }
   }
 
+  async function handleTogglePayment(field: "deposit_paid" | "final_paid") {
+    if (!project) return;
+    const now = new Date().toISOString();
+    const newVal = !project[field];
+    const atField = field === "deposit_paid" ? "deposit_paid_at" : "final_paid_at" as const;
+    const prevVal = project[field];
+    const prevAt = project[atField];
+    const patch = { [field]: newVal, [atField]: newVal ? now : null };
+    setProject((prev) => prev ? { ...prev, ...patch } : prev);
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setProject((prev) => prev ? { ...prev, [field]: prevVal, [atField]: prevAt } : prev);
+    }
+  }
+
   if (loading) {
     return (
       <div className="font-outfit space-y-4">
@@ -648,8 +669,11 @@ export default function ProjectDetailPage() {
           {project.contract_amount != null && (
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">입금 현황</p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <button
+                  onClick={() => handleTogglePayment("deposit_paid")}
+                  className="w-full flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-white hover:shadow-sm transition-all cursor-pointer"
+                >
                   <div className="flex items-center gap-1.5">
                     {project.deposit_paid ? (
                       <CheckCircle size={14} weight="fill" className="text-emerald-500" />
@@ -665,8 +689,11 @@ export default function ProjectDetailPage() {
                       ? (project.deposit_paid_at ? formatDate(project.deposit_paid_at) : "입금완료")
                       : "미입금"}
                   </span>
-                </div>
-                <div className="flex items-center justify-between">
+                </button>
+                <button
+                  onClick={() => handleTogglePayment("final_paid")}
+                  className="w-full flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-white hover:shadow-sm transition-all cursor-pointer"
+                >
                   <div className="flex items-center gap-1.5">
                     {project.final_paid ? (
                       <CheckCircle size={14} weight="fill" className="text-emerald-500" />
@@ -682,7 +709,7 @@ export default function ProjectDetailPage() {
                       ? (project.final_paid_at ? formatDate(project.final_paid_at) : "입금완료")
                       : "미입금"}
                   </span>
-                </div>
+                </button>
               </div>
             </div>
           )}
