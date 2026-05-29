@@ -51,7 +51,7 @@ export function TodayFollowupWidget({ followups, projects }: TodayFollowupWidget
             {followups.map((lead) => (
               <li key={lead.id}>
                 <Link
-                  href={`/leads/${lead.id}`}
+                  href={`/leads?q=${encodeURIComponent(lead.name)}`}
                   className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0 hover:bg-slate-50 -mx-2 px-2 rounded-lg transition-colors"
                 >
                   <div className="min-w-0">
