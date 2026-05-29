@@ -312,7 +312,9 @@ export function ClientFormSheet({
               onValueChange={(val) => val && handleChange("status", val)}
             >
               <SelectTrigger className="h-9 text-sm w-full">
-                <SelectValue placeholder="상태 선택" />
+                <SelectValue>
+                  {statusOptions.find((o) => o.value === formData.status)?.label ?? formData.status}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((opt) => (
@@ -337,7 +339,7 @@ export function ClientFormSheet({
               onValueChange={(val) => handleChange("source", val ?? "")}
             >
               <SelectTrigger className="h-9 text-sm w-full">
-                <SelectValue placeholder="인입경로 선택" />
+                <SelectValue>{formData.source || "인입경로 선택"}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {SOURCE_OPTIONS.map((opt) => (

@@ -19,6 +19,12 @@ const PIPELINE_STAGES: PipelineStage[] = ['상담', '견적', '계약', '계산�
 const SERVICE_TYPES: ServiceType[] = ['명함', '로고', '웹사이트', '쇼핑몰', '앱', '광고소재', 'SNS관리', '영상편집', '기타'];
 const SOURCE_CHANNELS: SourceChannel[] = ['숨고', '크몽', '위시캣', '라우드소싱', 'Fiverr', '직접문의', '재구매', '기타'];
 
+const PROJECT_STATUS_LABELS: Record<string, string> = {
+  active: "진행중",
+  completed: "완료",
+  on_hold: "보류",
+};
+
 interface ProjectFormDialogProps {
   open: boolean;
   onClose: () => void;
@@ -137,7 +143,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">파이프라인 단계</Label>
               <Select value={pipelineStage} onValueChange={(v) => setPipelineStage(v as PipelineStage)}>
-                <SelectTrigger className="font-outfit"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="font-outfit"><SelectValue>{pipelineStage}</SelectValue></SelectTrigger>
                 <SelectContent>
                   {PIPELINE_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
@@ -146,7 +152,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">상태</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>
-                <SelectTrigger className="font-outfit"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="font-outfit"><SelectValue>{PROJECT_STATUS_LABELS[status] ?? status}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">진행중</SelectItem>
                   <SelectItem value="completed">완료</SelectItem>
@@ -161,7 +167,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">서비스 유형</Label>
               <Select value={serviceType || NONE_VALUE} onValueChange={(v) => setServiceType(v === NONE_VALUE ? "" : v as ServiceType)}>
-                <SelectTrigger className="font-outfit"><SelectValue placeholder="선택 (선택사항)" /></SelectTrigger>
+                <SelectTrigger className="font-outfit"><SelectValue>{serviceType || "선택 안함"}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE_VALUE}>선택 안함</SelectItem>
                   {SERVICE_TYPES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -171,7 +177,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">유입 채널</Label>
               <Select value={sourceChannel || NONE_VALUE} onValueChange={(v) => setSourceChannel(v === NONE_VALUE ? "" : v as SourceChannel)}>
-                <SelectTrigger className="font-outfit"><SelectValue placeholder="선택 (선택사항)" /></SelectTrigger>
+                <SelectTrigger className="font-outfit"><SelectValue>{sourceChannel || "선택 안함"}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE_VALUE}>선택 안함</SelectItem>
                   {SOURCE_CHANNELS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -185,7 +191,13 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">클라이언트</Label>
               <Select value={clientId} onValueChange={(v) => setClientId(v ?? NONE_VALUE)}>
-                <SelectTrigger className="font-outfit"><SelectValue placeholder="선택 (선택사항)" /></SelectTrigger>
+                <SelectTrigger className="font-outfit">
+                  <SelectValue>
+                    {clientId === NONE_VALUE
+                      ? "없음"
+                      : (clients.find((c) => c.id === clientId)?.company_name ?? "없음")}
+                  </SelectValue>
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE_VALUE}>없음</SelectItem>
                   {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
