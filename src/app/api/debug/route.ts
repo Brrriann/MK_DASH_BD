@@ -26,5 +26,9 @@ export async function GET() {
     info.adminClientError = err instanceof Error ? err.message : String(err);
   }
 
+  // instrumentation 의 onRequestError 가 저장한 마지막 서버 에러 (서버 액션 실패 진단용)
+  const g = globalThis as unknown as { __lastError?: unknown };
+  info.lastError = g.__lastError ?? null;
+
   return NextResponse.json(info);
 }
