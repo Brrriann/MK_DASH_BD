@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { unstable_cache } from "next/cache";
+import { Plus } from "@phosphor-icons/react/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { InteractionsFilterBar } from "@/components/interactions/InteractionsFilterBar";
 import { InteractionsList } from "@/components/interactions/InteractionsList";
-import { InteractionFormSheet } from "@/components/interactions/InteractionFormSheet";
 
 const getInteractions = unstable_cache(
   async (params: { type?: string; q?: string }) => {
@@ -29,22 +30,7 @@ export default async function InteractionsPage({
   searchParams: Promise<{ type?: string; q?: string }>;
 }) {
   const params = await searchParams;
-  const supabase = createAdminClient();
-
-  const [interactions, { data: clientsList }, { data: leadsList }] =
-    await Promise.all([
-      getInteractions(params),
-      supabase
-        .from("clients")
-        .select("id, company_name, contact_name")
-        .order("company_name"),
-      supabase
-        .from("leads")
-        .select("id, name, company, status")
-        .not("status", "eq", "실패")
-        .order("created_at", { ascending: false })
-        .limit(200),
-    ]);
+  const interactions = await getInteractions(params);
 
   return (
     <div className="font-outfit">
@@ -55,10 +41,14 @@ export default async function InteractionsPage({
             {interactions.length}
           </span>
         </div>
-        <InteractionFormSheet
-          clients={clientsList ?? []}
-          leads={leadsList ?? []}
-        />
+        <Link
+          href="/interactions/new"
+          className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors shrink-0 min-h-[44px]"
+        >
+          <Plus size={16} weight="regular" />
+          <span className="hidden sm:inline">소통 추가</span>
+          <span className="sm:hidden">추가</span>
+        </Link>
       </div>
       <InteractionsFilterBar params={params} />
       <InteractionsList interactions={interactions} />
