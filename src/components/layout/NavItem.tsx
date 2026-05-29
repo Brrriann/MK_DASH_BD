@@ -22,7 +22,7 @@ export function NavItem({ href, label, icon: IconComponent, collapsed }: NavItem
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
         isActive
-          ? "bg-sidebar-active text-blue-300 border-l-2 border-blue-400"
+          ? "bg-sidebar-active text-blue-300"
           : "text-slate-400 hover:text-slate-200 hover:bg-slate-800",
         collapsed && "justify-center px-2"
       )}
