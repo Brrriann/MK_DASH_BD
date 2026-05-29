@@ -27,8 +27,9 @@ export async function GET() {
   }
 
   // instrumentation 의 onRequestError 가 저장한 마지막 서버 에러 (서버 액션 실패 진단용)
-  const g = globalThis as unknown as { __lastError?: unknown };
+  const g = globalThis as unknown as { __lastError?: unknown; __layoutAuthError?: unknown };
   info.lastError = g.__lastError ?? null;
+  info.layoutAuthError = g.__layoutAuthError ?? null;
 
   return NextResponse.json(info);
 }
