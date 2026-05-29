@@ -55,8 +55,9 @@ export async function POST(
       customBody,
     });
   } catch (err) {
-    console.error("Estimate email send error:", err);
-    return NextResponse.json({ error: "이메일 발송에 실패했습니다." }, { status: 502 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Estimate email send error:", msg);
+    return NextResponse.json({ error: msg }, { status: 502 });
   }
 
   // 만료 상태였다면 발송됨으로 업데이트
