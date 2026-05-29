@@ -21,13 +21,11 @@ interface EstimatesListClientProps {
 
 const STATUS_LABEL: Record<EstimateStatus, string> = {
   pending: "발송됨",
-  accepted: "수락",
   expired: "만료",
 };
 
 const STATUS_CLASS: Record<EstimateStatus, string> = {
   pending: "bg-blue-50 text-blue-700 border border-blue-200",
-  accepted: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   expired: "bg-slate-100 text-slate-500 border border-slate-200",
 };
 
@@ -148,7 +146,6 @@ export function EstimatesListClient({ initialEstimates, clientOptions }: Estimat
           <SelectContent>
             <SelectItem value="all">전체 상태</SelectItem>
             <SelectItem value="pending">발송됨</SelectItem>
-            <SelectItem value="accepted">수락</SelectItem>
             <SelectItem value="expired">만료</SelectItem>
           </SelectContent>
         </Select>

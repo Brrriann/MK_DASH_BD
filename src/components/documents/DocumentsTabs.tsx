@@ -22,7 +22,7 @@ import { deleteContract } from "@/lib/actions/contracts";
 import { deleteInvoice } from "@/lib/actions/invoices";
 
 // ---- Types ----
-type EstimateStatus = "pending" | "accepted" | "expired";
+type EstimateStatus = "pending" | "expired";
 type ContractStatus = "signed" | "pending" | "expired" | "signature_requested";
 
 interface EstimateItem {
@@ -126,12 +126,10 @@ function formatDate(s: string | null) {
 // ---- Status configs ----
 const estimateStatusLabel: Record<EstimateStatus, string> = {
   pending: "발송됨",
-  accepted: "수락",
   expired: "만료",
 };
 const estimateStatusClass: Record<EstimateStatus, string> = {
   pending: "bg-blue-50 text-blue-700 border border-blue-200",
-  accepted: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   expired: "bg-slate-100 text-slate-500 border border-slate-200",
 };
 const contractStatusLabel: Record<ContractStatus, string> = {
