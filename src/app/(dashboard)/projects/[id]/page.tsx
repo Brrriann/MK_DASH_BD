@@ -32,9 +32,9 @@ import {
   toggleProjectTaskAction,
   deleteProjectTaskAction,
   createTasksFromTemplateAction,
-  TASK_TEMPLATES,
   type ProjectTask,
 } from "@/lib/actions/project-tasks";
+import { TASK_TEMPLATES } from "@/lib/task-templates";
 import {
   fetchProjectDeliverablesAction,
   addProjectDeliverableAction,
