@@ -1,4 +1,6 @@
-import { createBrowserClient } from "@supabase/ssr";
+"use server";
+
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Client, ClientWithRevenue, ClientStatus, Project, MeetingNote, TaxInvoice, Estimate, Contract } from "@/lib/types";
 
 export type { Estimate, Contract };
@@ -19,19 +21,12 @@ export interface CreateClientInput {
   business_item?: string;
 }
 
-function getClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
-
 export async function fetchClients(params?: {
   search?: string;
   status?: string;
   sortBy?: string;
 }): Promise<ClientWithRevenue[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   let query = supabase.from("clients_with_revenue").select("*");
 
   if (params?.search) {
@@ -59,7 +54,7 @@ export async function fetchClients(params?: {
 }
 
 export async function fetchClient(id: string): Promise<ClientWithRevenue | null> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("clients_with_revenue")
     .select("*")
@@ -73,7 +68,7 @@ export async function fetchClient(id: string): Promise<ClientWithRevenue | null>
 }
 
 export async function createClient(data: CreateClientInput): Promise<Client> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: client, error } = await supabase
     .from("clients")
     .insert({
@@ -98,7 +93,7 @@ export async function createClient(data: CreateClientInput): Promise<Client> {
 }
 
 export async function updateClient(id: string, data: Partial<Client>): Promise<Client> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: client, error } = await supabase
     .from("clients")
     .update({ ...data, updated_at: new Date().toISOString() })
@@ -110,13 +105,13 @@ export async function updateClient(id: string, data: Partial<Client>): Promise<C
 }
 
 export async function deleteClient(id: string): Promise<void> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("clients").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function fetchClientProjects(clientId: string): Promise<Project[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("projects")
     .select("*")
@@ -127,7 +122,7 @@ export async function fetchClientProjects(clientId: string): Promise<Project[]> 
 }
 
 export async function fetchClientEstimates(clientId: string): Promise<Estimate[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("estimates")
     .select("*")
@@ -138,7 +133,7 @@ export async function fetchClientEstimates(clientId: string): Promise<Estimate[]
 }
 
 export async function fetchClientContracts(clientId: string): Promise<Contract[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("contracts")
     .select("*")
@@ -149,7 +144,7 @@ export async function fetchClientContracts(clientId: string): Promise<Contract[]
 }
 
 export async function fetchClientTaxInvoices(clientId: string): Promise<TaxInvoice[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("tax_invoices")
     .select("*")
@@ -160,7 +155,7 @@ export async function fetchClientTaxInvoices(clientId: string): Promise<TaxInvoi
 }
 
 export async function fetchClientMeetingNotes(clientId: string): Promise<MeetingNote[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("meeting_notes")
     .select("*")

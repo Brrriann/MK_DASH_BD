@@ -1,10 +1,10 @@
-import { createBrowserClient } from "@supabase/ssr";
-import type { Estimate } from "@/lib/types";
+"use server";
+
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Estimate, EstimateItem, EstimateStatus } from "@/lib/types";
 
 export type { Estimate };
-export type { EstimateItem } from "@/lib/types";
-
-import type { EstimateItem, EstimateStatus } from "@/lib/types";
+export type { EstimateItem };
 
 export type CreateEstimateInput = {
   title: string;
@@ -22,18 +22,11 @@ export type CreateEstimateInput = {
   description?: string | null;
 };
 
-function getClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
-
 export async function fetchEstimates(params?: {
   clientId?: string;
   status?: string;
 }): Promise<Estimate[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   let query = supabase
     .from("estimates")
     .select("*")
@@ -53,7 +46,7 @@ export async function fetchEstimates(params?: {
 }
 
 export async function createEstimate(data: CreateEstimateInput): Promise<Estimate> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: estimate, error } = await supabase
     .from("estimates")
     .insert({
@@ -81,7 +74,7 @@ export async function updateEstimate(
   id: string,
   data: Partial<Estimate>
 ): Promise<Estimate> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: estimate, error } = await supabase
     .from("estimates")
     .update(data)
@@ -93,7 +86,7 @@ export async function updateEstimate(
 }
 
 export async function deleteEstimate(id: string): Promise<void> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("estimates").delete().eq("id", id);
   if (error) throw error;
 }
