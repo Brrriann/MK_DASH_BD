@@ -22,7 +22,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/clients/StatusBadge";
 import { ClientFormSheet } from "@/components/clients/ClientFormSheet";
 import { InvoiceFormDialog } from "@/components/invoices/InvoiceFormDialog";
-import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import { ProjectFormDialog } from "@/components/projects/ProjectFormDialog";
 import {
   fetchClient,
@@ -95,7 +94,6 @@ export default function ClientDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-  const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
   const loadAll = useCallback(async () => {
@@ -496,13 +494,13 @@ export default function ClientDetailPage() {
                     <Plus size={12} weight="regular" />
                     새 견적서
                   </Link>
-                  <button
-                    onClick={() => setContractDialogOpen(true)}
+                  <Link
+                    href={`/contracts/new?client_id=${id}`}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
                   >
                     <Plus size={12} weight="regular" />
                     새 계약서
-                  </button>
+                  </Link>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -638,14 +636,6 @@ export default function ClientDetailPage() {
         onClose={() => setInvoiceDialogOpen(false)}
         clients={client ? [client] : []}
         onSaved={() => { setInvoiceDialogOpen(false); loadAll(); }}
-      />
-
-      {/* 계약서 Dialog */}
-      <ContractFormDialog
-        open={contractDialogOpen}
-        onClose={() => setContractDialogOpen(false)}
-        clients={client ? [client] : []}
-        onSaved={() => { setContractDialogOpen(false); loadAll(); }}
       />
 
       {/* 프로젝트 생성 Dialog — 클라이언트 고정 */}
