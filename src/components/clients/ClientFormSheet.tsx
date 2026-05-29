@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { createClientAction, updateClientAction, type ClientInput as CreateClientInput } from "@/lib/actions/client-actions";
 import type { Client, ClientStatus } from "@/lib/types";
+import { formatPhone, formatBRN } from "@/lib/utils/input-formatters";
 
 interface ClientFormSheetProps {
   open: boolean;
@@ -278,7 +279,7 @@ export function ClientFormSheet({
             <Input
               id="phone"
               value={formData.phone ?? ""}
-              onChange={(e) => handleChange("phone", e.target.value)}
+              onChange={(e) => handleChange("phone", formatPhone(e.target.value))}
               placeholder="010-0000-0000"
               className="h-9 text-sm"
             />
@@ -408,7 +409,7 @@ export function ClientFormSheet({
                 <Input
                   id="brn"
                   value={formData.business_registration_number ?? ""}
-                  onChange={(e) => handleChange("business_registration_number", e.target.value)}
+                  onChange={(e) => handleChange("business_registration_number", formatBRN(e.target.value))}
                   placeholder="000-00-00000"
                   className="h-9 text-sm"
                 />

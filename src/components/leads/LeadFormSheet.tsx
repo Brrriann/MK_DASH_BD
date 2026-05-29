@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { createLead, type LeadInput } from "@/lib/actions/lead-actions";
 import type { LeadSource } from "@/lib/types";
+import { formatPhone, formatAmount, parseAmount } from "@/lib/utils/input-formatters";
 
 const SOURCE_OPTIONS: LeadSource[] = [
   "숨고",
@@ -156,7 +157,7 @@ export function LeadFormSheet() {
               <input
                 type="tel"
                 value={form.phone ?? ""}
-                onChange={(e) => set("phone", e.target.value)}
+                onChange={(e) => set("phone", formatPhone(e.target.value))}
                 placeholder="010-0000-0000"
                 className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
               />
@@ -219,17 +220,11 @@ export function LeadFormSheet() {
                 예산 (원)
               </label>
               <input
-                type="number"
-                min={0}
-                step={10000}
-                value={form.budget_estimate ?? ""}
-                onChange={(e) =>
-                  set(
-                    "budget_estimate",
-                    e.target.value ? Number(e.target.value) : undefined
-                  )
-                }
-                placeholder="500000"
+                type="text"
+                inputMode="numeric"
+                value={form.budget_estimate != null ? Number(form.budget_estimate).toLocaleString("ko-KR") : ""}
+                onChange={(e) => set("budget_estimate", parseAmount(e.target.value) ?? undefined)}
+                placeholder="500,000"
                 className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
               />
             </div>

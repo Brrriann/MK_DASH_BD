@@ -14,6 +14,7 @@ import {
 import type { CreateProjectInput } from "@/lib/actions/projects";
 import type { Project, ClientWithRevenue, ProjectStatus, PipelineStage, ServiceType, SourceChannel } from "@/lib/types";
 import { TASK_TEMPLATES } from "@/lib/task-templates";
+import { formatAmount } from "@/lib/utils/input-formatters";
 
 const PIPELINE_STAGES: PipelineStage[] = ['상담', '견적', '계약', '계산서발행', '계약입금', '착수', '납품', '완납'];
 const SERVICE_TYPES: ServiceType[] = ['웹개발', '앱개발', '소프트웨어개발', '디자인', '영상', '강의/컨설팅', '기타'];
@@ -90,7 +91,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved, de
       client_id: clientId === NONE_VALUE ? null : clientId,
       pipeline_stage: pipelineStage,
       service_type: serviceType || null,
-      contract_amount: contractAmount ? Number(contractAmount) : null,
+      contract_amount: contractAmount ? Number(contractAmount.replace(/,/g, "")) : null,
       deposit_paid: depositPaid,
       deposit_paid_at: depositPaid && depositPaidAt ? depositPaidAt : null,
       final_paid: finalPaid,
@@ -236,9 +237,9 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved, de
           {/* 계약금액 */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="contract-amount" className="text-sm text-slate-700 font-medium">계약금액 (원)</Label>
-            <Input id="contract-amount" type="number" value={contractAmount}
-              onChange={(e) => setContractAmount(e.target.value)}
-              placeholder="계약 금액 입력" className="font-outfit" min={0} />
+            <Input id="contract-amount" type="text" inputMode="numeric" value={contractAmount}
+              onChange={(e) => setContractAmount(formatAmount(e.target.value))}
+              placeholder="0" className="font-outfit" />
           </div>
 
           {/* 입금 추적 */}
