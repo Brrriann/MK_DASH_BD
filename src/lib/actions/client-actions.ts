@@ -14,6 +14,20 @@ export async function fetchClientsAction(): Promise<ClientWithRevenue[]> {
   return (data ?? []) as ClientWithRevenue[];
 }
 
+export async function fetchClientAction(clientId: string): Promise<ClientWithRevenue | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("clients_with_revenue")
+    .select("*")
+    .eq("id", clientId)
+    .single();
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw new Error(error.message);
+  }
+  return data as ClientWithRevenue;
+}
+
 export async function fetchClientInteractionsAction(clientId: string): Promise<Interaction[]> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
