@@ -2,7 +2,17 @@
 
 import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Client } from "@/lib/types";
+import type { Client, ClientWithRevenue } from "@/lib/types";
+
+export async function fetchClientsAction(): Promise<ClientWithRevenue[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("clients_with_revenue")
+    .select("*")
+    .order("company_name", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ClientWithRevenue[];
+}
 
 export interface ClientInput {
   company_name: string;

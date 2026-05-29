@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ProjectFormDialog } from "@/components/projects/ProjectFormDialog";
 import { fetchProjects, deleteProject } from "@/lib/actions/projects";
-import { fetchClients } from "@/lib/actions/clients";
+import { fetchClientsAction } from "@/lib/actions/client-actions";
 import type { Project, ClientWithRevenue, PipelineStage } from "@/lib/types";
 
 const PIPELINE_STAGES: PipelineStage[] = ['상담', '견적', '계약', '계산서발행', '계약입금', '착수', '납품', '완납'];
@@ -169,7 +169,7 @@ export default function ProjectsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [projectsData, clientsData] = await Promise.all([fetchProjects(), fetchClients()]);
+      const [projectsData, clientsData] = await Promise.all([fetchProjects(), fetchClientsAction()]);
       setProjects(projectsData);
       setClients(clientsData);
     } catch {
