@@ -46,6 +46,54 @@ export async function sendSignatureRequest(params: SendSignatureRequestParams) {
   if (error) throw new Error(`Resend error: ${JSON.stringify(error)}`);
 }
 
+export interface SendEstimateParams {
+  to: string;
+  recipientName: string;
+  estimateTitle: string;
+  pdfUrl: string | null;
+  amount: number;
+  issuedAt: string;
+  expiresAt: string | null;
+}
+
+export async function sendEstimate(params: SendEstimateParams) {
+  const { to, recipientName, estimateTitle, pdfUrl, amount, issuedAt, expiresAt } = params;
+
+  const formatAmount = (n: number) =>
+    n.toLocaleString("ko-KR") + "원";
+  const formatDate = (s: string) =>
+    new Date(s).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+
+  const pdfSection = pdfUrl
+    ? `<a href="${pdfUrl}" style="display:inline-block;background:#2563eb;color:white;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:600;margin:16px 0;">📄 견적서 확인하기</a>`
+    : "";
+
+  const { error } = await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `[견적서] ${estimateTitle}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+        <h2 style="font-size:16px;color:#0f172a;margin-bottom:8px;">📋 견적서를 보내드립니다</h2>
+        <p style="color:#475569;font-size:14px;line-height:1.7;">
+          ${recipientName} 님,<br/>
+          <strong>${estimateTitle}</strong>에 대한 견적서를 보내드립니다.
+        </p>
+        ${pdfSection}
+        <div style="background:#f8fafc;border-radius:6px;padding:12px;font-size:13px;color:#64748b;margin-top:8px;">
+          📋 ${estimateTitle}<br/>
+          💰 견적 금액: <strong style="color:#0f172a;">${formatAmount(amount)}</strong><br/>
+          📅 발행일: ${formatDate(issuedAt)}${expiresAt ? `<br/>⏰ 유효 기한: ${formatDate(expiresAt)}` : ""}
+        </div>
+        <p style="font-size:12px;color:#94a3b8;margin-top:20px;">
+          문의 사항이 있으시면 언제든지 연락 주세요.
+        </p>
+      </div>
+    `,
+  });
+  if (error) throw new Error(`Resend error: ${JSON.stringify(error)}`);
+}
+
 export interface SendSignatureCompleteParams {
   clientEmail: string;
   clientName: string;

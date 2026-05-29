@@ -52,13 +52,13 @@ const projectStatusClass: Record<string, string> = {
 };
 
 const estimateStatusLabel: Record<string, string> = {
-  pending: "검토중",
+  pending: "발송됨",
   accepted: "수락",
   expired: "만료",
 };
 
 const estimateStatusClass: Record<string, string> = {
-  pending: "bg-amber-50 text-amber-700 border border-amber-200",
+  pending: "bg-blue-50 text-blue-700 border border-blue-200",
   accepted: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   expired: "bg-slate-100 text-slate-500 border border-slate-200",
 };
