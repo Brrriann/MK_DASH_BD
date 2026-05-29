@@ -190,20 +190,28 @@ export default function ProjectsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
+
+    // fetchProjects 는 내부에서 에러를 캐치해 반환값으로 전달 — throw 없음
     try {
-      const [result, clientsData] = await Promise.all([
-        fetchProjects(),
-        fetchClientsAction().catch(() => [] as ClientWithRevenue[]),
-      ]);
-      if (result.error) setLoadError(result.error);
+      const result = await fetchProjects();
       setProjects(result.projects);
-      setClients(clientsData);
+      if (result.error) setLoadError(result.error);
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : "프로젝트 로드에 실패했습니다.");
+      // 만약 Server Action 호출 자체가 실패하면 여기로 (opennextjs 환경에서 동기 throw 가능)
+      const msg = err instanceof Error ? err.message : "프로젝트 로드 실패";
+      setLoadError(msg);
       setProjects([]);
-    } finally {
-      setLoading(false);
     }
+
+    // 고객 목록은 별도 블록 — 실패해도 프로젝트 목록에 영향 없음
+    try {
+      const clientsData = await fetchClientsAction();
+      setClients(clientsData);
+    } catch {
+      /* 고객명 표시 실패 — 무시 */
+    }
+
+    setLoading(false);
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
