@@ -39,10 +39,12 @@ import {
   fetchProjectDeliverablesAction,
   addProjectDeliverableAction,
   deleteProjectDeliverableAction,
-  detectUrlType,
-  URL_TYPE_CONFIG,
   type ProjectDeliverable,
 } from "@/lib/actions/project-deliverables";
+import {
+  detectUrlType,
+  URL_TYPE_CONFIG,
+} from "@/lib/utils/deliverable-utils";
 import type { Project, ClientWithRevenue, Interaction } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
