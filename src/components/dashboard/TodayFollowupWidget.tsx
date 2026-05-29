@@ -20,10 +20,11 @@ interface RecentProject {
 
 interface TodayFollowupWidgetProps {
   followups: FollowupLead[];
+  tomorrowFollowups: FollowupLead[];
   projects: RecentProject[];
 }
 
-export function TodayFollowupWidget({ followups, projects }: TodayFollowupWidgetProps) {
+export function TodayFollowupWidget({ followups, tomorrowFollowups, projects }: TodayFollowupWidgetProps) {
   const today = new Date();
 
   function getDaysLeft(deadline: string): number {
@@ -61,6 +62,43 @@ export function TodayFollowupWidget({ followups, projects }: TodayFollowupWidget
                     )}
                   </div>
                   <span className="shrink-0 ml-2 text-xs text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-full">
+                    {lead.source}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* 내일 팔로업 */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <CalendarCheck size={14} className="text-slate-400" />
+          <h3 className="font-outfit text-sm font-semibold text-slate-500">내일 팔로업</h3>
+          {tomorrowFollowups.length > 0 && (
+            <span className="ml-auto inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+              {tomorrowFollowups.length}건
+            </span>
+          )}
+        </div>
+        {tomorrowFollowups.length === 0 ? (
+          <p className="text-slate-400 text-xs text-center py-3">내일 팔로업 예약 없음</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {tomorrowFollowups.map((lead) => (
+              <li key={lead.id}>
+                <Link
+                  href={`/leads?q=${encodeURIComponent(lead.name)}`}
+                  className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0 hover:bg-slate-50 -mx-2 px-2 rounded-lg transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-600 truncate">{lead.name}</p>
+                    {lead.company && (
+                      <p className="text-xs text-slate-400 truncate">{lead.company}</p>
+                    )}
+                  </div>
+                  <span className="shrink-0 ml-2 text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
                     {lead.source}
                   </span>
                 </Link>
