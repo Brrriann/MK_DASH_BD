@@ -2,7 +2,8 @@
 
 import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { LeadStatus, LeadSource } from "@/lib/types";
+import { createProject } from "@/lib/actions/projects";
+import type { LeadStatus, LeadSource, ServiceType } from "@/lib/types";
 
 export type LeadInput = {
   name: string;
@@ -133,22 +134,19 @@ export async function convertLeadToClientWithProject(
     .select().single();
   if (clientError) throw new Error(clientError.message);
 
-  // 프로젝트 생성 (선택)
+  // 프로젝트 생성 (선택) — createProject 공통 함수 사용으로 일관성 확보
   if (projectData?.title?.trim()) {
-    const { error: projError } = await supabase.from("projects").insert({
+    await createProject({
       title: projectData.title.trim(),
       client_id: client.id,
       status: "active",
-      progress: 0,
       pipeline_stage: "상담",
-      service_type: projectData.service_type ?? null,
+      service_type: (projectData.service_type || null) as ServiceType | null,
       contract_amount: projectData.contract_amount ?? null,
-      deposit_ratio: 50,
       deposit_paid: false,
       final_paid: false,
       deadline: projectData.deadline ?? null,
     });
-    if (projError) throw new Error(projError.message);
   }
 
   // 리드 전환 처리 — 고객 전환 폼에서 수정된 이름/회사도 리드에 반영

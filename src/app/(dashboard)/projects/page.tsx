@@ -22,6 +22,57 @@ function KanbanView({ projects, clients, onEdit }: {
     return clients.find(c => c.id === clientId)?.company_name ?? null;
   }
 
+  // pipeline_stage 값이 유효한 스테이지 목록에 없는 프로젝트 (잘못된 인코딩 등)
+  const uncategorized = projects.filter(
+    p => !PIPELINE_STAGES.includes(p.pipeline_stage as PipelineStage)
+  );
+
+  const renderCard = (p: Project) => {
+    const clientName = getClientName(p.client_id);
+    const today = new Date().toISOString().split('T')[0];
+    const isDeadlineSoon = p.deadline && p.deadline >= today &&
+      new Date(p.deadline).getTime() - Date.now() < 7 * 86400000;
+    return (
+      <div key={p.id} className="bg-white rounded-lg border border-slate-200 p-3 hover:border-blue-300 transition-colors group">
+        <div className="flex items-start justify-between gap-1">
+          <Link href={`/projects/${p.id}`} className="text-sm font-medium text-slate-800 line-clamp-2 hover:text-blue-600 flex-1">
+            {p.title}
+          </Link>
+          <button onClick={() => onEdit(p)}
+            className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-blue-600 transition-all">
+            <PencilSimple size={12} />
+          </button>
+        </div>
+        {clientName && (
+          <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+            <Buildings size={10} />{clientName}
+          </p>
+        )}
+        {p.contract_amount && (
+          <p className="text-[10px] text-slate-500 mt-1 font-medium">
+            {p.contract_amount.toLocaleString('ko-KR')}원
+          </p>
+        )}
+        {p.deadline && (
+          <p className={`text-[10px] mt-1 ${isDeadlineSoon ? 'text-red-500 font-semibold' : 'text-slate-400'}`}>
+            마감 {p.deadline}
+          </p>
+        )}
+        <div className="flex gap-1 mt-1.5 flex-wrap">
+          {p.deposit_paid && (
+            <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">계약금✓</span>
+          )}
+          {p.final_paid && (
+            <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">잔금✓</span>
+          )}
+          {p.service_type && (
+            <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">{p.service_type}</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex gap-3 overflow-x-auto pb-4">
       {PIPELINE_STAGES.map(stage => {
@@ -39,51 +90,7 @@ function KanbanView({ projects, clients, onEdit }: {
               </p>
             )}
             <div className="flex flex-col gap-2">
-              {stageProjects.map(p => {
-                const clientName = getClientName(p.client_id);
-                const today = new Date().toISOString().split('T')[0];
-                const isDeadlineSoon = p.deadline && p.deadline >= today &&
-                  new Date(p.deadline).getTime() - Date.now() < 7 * 86400000;
-                return (
-                  <div key={p.id} className="bg-white rounded-lg border border-slate-200 p-3 hover:border-blue-300 transition-colors group">
-                    <div className="flex items-start justify-between gap-1">
-                      <Link href={`/projects/${p.id}`} className="text-sm font-medium text-slate-800 line-clamp-2 hover:text-blue-600 flex-1">
-                        {p.title}
-                      </Link>
-                      <button onClick={() => onEdit(p)}
-                        className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-blue-600 transition-all">
-                        <PencilSimple size={12} />
-                      </button>
-                    </div>
-                    {clientName && (
-                      <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                        <Buildings size={10} />{clientName}
-                      </p>
-                    )}
-                    {p.contract_amount && (
-                      <p className="text-[10px] text-slate-500 mt-1 font-medium">
-                        {p.contract_amount.toLocaleString('ko-KR')}원
-                      </p>
-                    )}
-                    {p.deadline && (
-                      <p className={`text-[10px] mt-1 ${isDeadlineSoon ? 'text-red-500 font-semibold' : 'text-slate-400'}`}>
-                        마감 {p.deadline}
-                      </p>
-                    )}
-                    <div className="flex gap-1 mt-1.5 flex-wrap">
-                      {p.deposit_paid && (
-                        <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">계약금✓</span>
-                      )}
-                      {p.final_paid && (
-                        <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">잔금✓</span>
-                      )}
-                      {p.service_type && (
-                        <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">{p.service_type}</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {stageProjects.map(renderCard)}
               {stageProjects.length === 0 && (
                 <div className="rounded-lg border border-dashed border-slate-200 p-3 text-center">
                   <p className="text-[10px] text-slate-300">없음</p>
@@ -93,6 +100,18 @@ function KanbanView({ projects, clients, onEdit }: {
           </div>
         );
       })}
+      {/* 알 수 없는 단계 프로젝트 (인코딩/마이그레이션 이슈로 스테이지가 맞지 않는 경우) */}
+      {uncategorized.length > 0 && (
+        <div className="flex-shrink-0 w-52">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-xs font-semibold text-amber-600">미분류</span>
+            <span className="text-[10px] text-amber-400 bg-amber-50 rounded-full px-1.5 py-0.5">{uncategorized.length}</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {uncategorized.map(renderCard)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -161,19 +180,25 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<ClientWithRevenue[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [view, setView] = useState<"kanban" | "list">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   // 프로젝트 생성은 고객 상세 페이지에서만 가능 — 여기서는 편집 다이얼로그만 사용
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const [projectsData, clientsData] = await Promise.all([fetchProjects(), fetchClientsAction()]);
+      const [projectsData, clientsData] = await Promise.all([
+        fetchProjects(),
+        fetchClientsAction().catch(() => [] as ClientWithRevenue[]),
+      ]);
       setProjects(projectsData);
       setClients(clientsData);
-    } catch {
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "프로젝트 로드에 실패했습니다.");
       setProjects([]);
     } finally {
       setLoading(false);
@@ -224,6 +249,9 @@ export default function ProjectsPage() {
 
       {deleteError && (
         <p className="mb-4 text-sm text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{deleteError}</p>
+      )}
+      {loadError && (
+        <p className="mb-4 text-sm text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">데이터 로드 오류: {loadError}</p>
       )}
 
       {loading ? (

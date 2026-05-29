@@ -30,7 +30,8 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [withProject, setWithProject] = useState(false);
+  // 리드에 관심 서비스 정보가 있으면 프로젝트 생성 토글 기본 활성화
+  const [withProject, setWithProject] = useState(() => !!lead?.service_interest);
 
   // 고객 정보 (리드에서 prefill)
   const [client, setClient] = useState<ConvertClientData>({

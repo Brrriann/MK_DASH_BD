@@ -62,7 +62,7 @@ export async function fetchClient(id: string): Promise<ClientWithRevenue | null>
     .single();
   if (error) {
     if (error.code === "PGRST116") return null;
-    throw error;
+    throw new Error(error.message);
   }
   return data as ClientWithRevenue;
 }
