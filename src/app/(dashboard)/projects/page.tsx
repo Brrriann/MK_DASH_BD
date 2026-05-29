@@ -191,11 +191,12 @@ export default function ProjectsPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [projectsData, clientsData] = await Promise.all([
+      const [result, clientsData] = await Promise.all([
         fetchProjects(),
         fetchClientsAction().catch(() => [] as ClientWithRevenue[]),
       ]);
-      setProjects(projectsData);
+      if (result.error) setLoadError(result.error);
+      setProjects(result.projects);
       setClients(clientsData);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "프로젝트 로드에 실패했습니다.");

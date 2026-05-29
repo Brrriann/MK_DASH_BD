@@ -21,14 +21,18 @@ export type CreateProjectInput = {
   source_channel?: SourceChannel | null;
 };
 
-export async function fetchProjects(): Promise<Project[]> {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as Project[];
+export async function fetchProjects(): Promise<{ projects: Project[]; error?: string }> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) return { projects: [], error: error.message };
+    return { projects: (data ?? []) as Project[] };
+  } catch (err) {
+    return { projects: [], error: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 export async function fetchProject(id: string): Promise<Project | null> {
