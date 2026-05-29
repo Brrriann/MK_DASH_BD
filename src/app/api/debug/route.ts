@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
-
 export async function GET() {
   const info: Record<string, unknown> = {
     hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
