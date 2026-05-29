@@ -43,8 +43,9 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { signerName, signatureBase64 } = body as {
+  const { signerName, signerPhone, signatureBase64 } = body as {
     signerName?: unknown;
+    signerPhone?: unknown;
     signatureBase64?: unknown;
   };
 
@@ -124,6 +125,9 @@ export async function POST(req: NextRequest, { params }: Params) {
     await admin.from("contracts").update({
       status: "signed",
       signer_name: signerName.trim(),
+      signer_phone: typeof signerPhone === "string" && signerPhone.trim()
+        ? signerPhone.trim()
+        : null,
       signer_email: client?.email ?? null,
       signer_ip: ip,
       signer_user_agent: userAgent,
