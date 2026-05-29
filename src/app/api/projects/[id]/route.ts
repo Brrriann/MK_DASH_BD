@@ -1,5 +1,30 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Project } from "@/lib/types";
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  try {
+    const body = (await req.json()) as Partial<Project>;
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("projects")
+      .update({ ...body, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ project: data });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "수정 실패" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function DELETE(
   _req: Request,

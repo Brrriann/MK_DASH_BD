@@ -11,10 +11,20 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { createProject, updateProject, type CreateProjectInput } from "@/lib/actions/projects";
-import { revalidateProjects } from "@/lib/actions/revalidate";
-import { createTasksFromTemplateAction, TASK_TEMPLATES } from "@/lib/actions/project-tasks";
+import type { CreateProjectInput } from "@/lib/actions/projects";
 import type { Project, ClientWithRevenue, ProjectStatus, PipelineStage, ServiceType, SourceChannel } from "@/lib/types";
+
+const TASK_TEMPLATES: Record<string, string[]> = {
+  웹사이트:  ["기획/요구사항 정리", "와이어프레임", "디자인 시안", "디자인 확정", "개발", "퍼블리싱", "검수", "납품"],
+  쇼핑몰:   ["기획/요구사항 정리", "상품 카테고리 설계", "디자인 시안", "디자인 확정", "개발", "검수", "납품"],
+  앱:       ["기획/요구사항 정리", "UI/UX 설계", "디자인", "개발", "테스트", "배포"],
+  로고:     ["브리핑", "컨셉 제안", "1차 시안", "수정", "최종 확정", "파일 납품"],
+  명함:     ["디자인 의뢰", "시안 확인", "수정", "최종 확정", "인쇄 발주", "수령/납품"],
+  광고소재: ["기획", "소재 제작", "1차 검토", "수정", "최종 납품"],
+  SNS관리:  ["컨텐츠 기획", "소재 제작", "업로드", "리포팅"],
+  영상편집: ["원본 수령", "편집", "1차 검토", "수정", "최종 납품"],
+  기타:     ["기획", "진행", "검수", "납품"],
+};
 
 const PIPELINE_STAGES: PipelineStage[] = ['상담', '견적', '계약', '계산서발행', '계약입금', '착수', '납품', '완납'];
 const SERVICE_TYPES: ServiceType[] = ['명함', '로고', '웹사이트', '쇼핑몰', '앱', '광고소재', 'SNS관리', '영상편집', '기타'];
@@ -101,18 +111,30 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved, de
     };
 
     try {
+      // opennextjs-cloudflare 환경에서 서버 액션 POST 가 실패하므로 API 라우트 사용
       if (isEdit && project) {
-        await updateProject(project.id, data);
+        const res = await fetch(`/api/projects/${project.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error ?? `수정 실패 (${res.status})`);
+        }
       } else {
-        const created = await createProject(data);
-        // 신규 생성 + 서비스 유형 있음 + 자동 생성 체크 → 템플릿 적용
-        if (autoCreateTasks && data.service_type && TASK_TEMPLATES[data.service_type]) {
-          await createTasksFromTemplateAction(created.id, data.service_type);
+        const res = await fetch(`/api/projects`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...data, autoCreateTasks }),
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error ?? `생성 실패 (${res.status})`);
         }
       }
       onSaved();
       onClose();
-      revalidateProjects().catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "저장에 실패했습니다.");
     } finally {
