@@ -146,7 +146,11 @@ export function EstimateNewPage({ clients }: EstimateNewPageProps) {
             <label className="text-sm font-medium text-slate-700">클라이언트</label>
             <Select value={clientId} onValueChange={v => setClientId(v ?? NONE)}>
               <SelectTrigger className="h-10 font-outfit text-sm">
-                <SelectValue placeholder="선택 (선택사항)" />
+                <span className={clientId === NONE ? "text-slate-400" : "text-slate-900"}>
+                  {clientId === NONE
+                    ? "선택 (선택사항)"
+                    : (clients.find(c => c.id === clientId)?.company_name ?? "선택됨")}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>없음</SelectItem>
