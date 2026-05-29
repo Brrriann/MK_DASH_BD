@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, UploadSimple, Link as LinkIcon, FilePdf } from "@phosphor-icons/react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -16,9 +16,10 @@ const NONE = "__none__";
 
 export function EstimateNewPage({ clients }: EstimateNewPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [title, setTitle] = useState("");
-  const [clientId, setClientId] = useState(NONE);
+  const [clientId, setClientId] = useState(searchParams.get("client_id") ?? NONE);
   const [amount, setAmount] = useState("");
   const [issuedAt, setIssuedAt] = useState(new Date().toISOString().split("T")[0]);
   const [expiresAt, setExpiresAt] = useState("");

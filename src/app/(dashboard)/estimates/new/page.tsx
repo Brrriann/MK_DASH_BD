@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EstimateNewPage } from "@/components/estimates/EstimateNewPage";
 import type { ClientWithRevenue } from "@/lib/types";
@@ -14,5 +15,9 @@ async function getClients(): Promise<ClientWithRevenue[]> {
 
 export default async function NewEstimatePage() {
   const clients = await getClients();
-  return <EstimateNewPage clients={clients} />;
+  return (
+    <Suspense>
+      <EstimateNewPage clients={clients} />
+    </Suspense>
+  );
 }
