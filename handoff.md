@@ -9,34 +9,36 @@
 
 ## 최근 완료 작업 (2026-05-29)
 
+### 견적서 메뉴 완전 재설계 ✅
+기존 복잡한 폼(품목 입력, AI 생성, PDF 렌더링)을 **파일 업로드 + 이메일 발송** 방식으로 전환.
+
+**새 플로우:**
+- `/estimates` → Server Component 리스트 (inline 상태 변경 셀렉터)
+- `/estimates/new` → 새 견적서 전용 페이지 (파일 업로드 or URL 입력)
+- 이메일 발송: `PaperPlaneTilt` 버튼 → `/api/estimates/[id]/send` → Resend
+- 파일 업로드: `/api/estimates/upload` → Supabase Storage `estimates` 버킷
+
+**주의:** Supabase Storage에 `estimates` 버킷(public)을 생성해야 파일 업로드 가능.
+
+**상태 레이블 변경:** `pending` → "발송됨" (DB 값은 그대로, UI 표시만 변경)
+
+### 홈화면 내일 팔로업 추가 ✅
+### 소통 추가 → 전용 페이지 전환 ✅
 ### 서버 액션 전면 실패 근본 원인 수정 ✅
-**원인:** `src/lib/actions/project-tasks.ts` (`"use server"` 파일)에서 `TASK_TEMPLATES` 객체(`const`)를 `export` → Next.js가 모든 서버 액션 등록 거부 → 앱 전체 서버 액션 500 에러
 
-**수정:**
-- `src/lib/task-templates.ts` 신규 생성 (`TASK_TEMPLATES` 단독 파일, `"use server"` 없음)
-- `project-tasks.ts`: `TASK_TEMPLATES` export 제거, 내부 import 전용으로 변경
-- `projects/[id]/page.tsx`: import 경로를 `@/lib/task-templates` 로 변경
-- **검증:** wrangler tail 로그에서 에러 소멸 확인, 배포 후 서버 액션 POST 정상 응답
+## 알려진 이슈
 
-**교훈:** `"use server"` 파일은 `async` 함수만 export 가능. `interface`/`type`은 컴파일 타임 소거라 무방하나, `const`·`let` 등 런타임 값 export는 전체 서버 액션을 죽임.
-
-### 프로젝트 메뉴 미표시 버그 수정 ✅ (서버액션 우회, 이미 완료)
-- `projects/page.tsx`: async Server Component 전환, Supabase 직접 호출
-- `/api/projects` POST·PATCH·DELETE API 라우트 신규 (서버액션 대신 사용)
-- **검증 완료:** 생성·수정·삭제 모두 프로덕션 정상
-
-## 알려진 이슈 (기존)
-
-- **`projects/[id]/page.tsx`**: 아직 `"use client"` + 서버액션 사용 — 서버액션 수정으로 이제 동작해야 하나 미검증. 고객 상세 페이지에서 프로젝트 클릭 시 동작 확인 필요.
+- **Supabase Storage `estimates` 버킷 미생성**: 견적서 파일 업로드 기능 사용 전 Supabase 대시보드에서 `estimates` 퍼블릭 버킷 생성 필요
+- **이메일 발송**: Resend 무료 플랜 도메인 인증 후 재테스트 필요 (`RESEND_FROM` 환경변수도 설정 필요)
+- **`projects/[id]/page.tsx`**: `"use client"` + 서버액션 사용 — 동작은 하나 미검증
 - **Migration 011**: `contracts.signer_phone` 컬럼 수동 추가 필요
-- **이메일 발송**: Resend 무료 플랜 도메인 인증 후 재테스트 필요
 - **Bolta API** (`/api/bolta/issue`): 실제 API 키 테스트 필요
 - **로컬 빌드**: Windows webpack EISDIR (GitHub Actions로 우회)
-- **빌드 프리렌더**: `(dashboard)/layout.tsx` 의 `cookies()` — try/catch 추가 시 `/meetings/new` 등 프리렌더 깨짐 (수정 시 주의)
 
 ## 환경변수 (Cloudflare Workers 시크릿)
 ```
 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY ✅
-RESEND_API_KEY / NVIDIA_API_KEY / BOLTA_API_KEY / BOLTA_CUSTOMER_KEY
+RESEND_API_KEY / RESEND_FROM (이메일 발신 주소, 설정 안 되면 onboarding@resend.dev 사용)
+NVIDIA_API_KEY / BOLTA_API_KEY / BOLTA_CUSTOMER_KEY
 NEXT_PUBLIC_APP_URL=https://mk-dash-bd.official-f0c.workers.dev
 ```
