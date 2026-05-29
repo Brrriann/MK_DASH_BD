@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   FolderOpen, PencilSimple, Trash, Buildings, Rows, Kanban, CalendarBlank,
+  CaretLeft, CaretRight,
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ProjectFormDialog } from "@/components/projects/ProjectFormDialog";
@@ -53,8 +54,10 @@ const STAGE_GROUPS = [
 ] as const;
 
 /* ─────────────────────────────────────────
-   스윔레인 칸반
+   스윔레인 칸반 (그룹별 페이지네이션)
 ───────────────────────────────────────── */
+const ITEMS_PER_PAGE = 4;
+
 function KanbanView({
   projects, clients, onEdit,
 }: {
@@ -62,7 +65,14 @@ function KanbanView({
   clients: ClientWithRevenue[];
   onEdit: (p: Project) => void;
 }) {
-  const today = new Date().toISOString().split("T")[0];
+  // 그룹별 현재 페이지 (key = group label)
+  const [pages, setPages] = useState<Record<string, number>>(() =>
+    Object.fromEntries(STAGE_GROUPS.map((g) => [g.label, 0]))
+  );
+
+  function setPage(label: string, next: number) {
+    setPages((prev) => ({ ...prev, [label]: next }));
+  }
 
   function getClientName(clientId: string | null) {
     if (!clientId) return null;
@@ -89,7 +99,7 @@ function KanbanView({
     return (
       <div
         key={p.id}
-        className="relative w-48 flex-shrink-0 bg-white rounded-xl border border-slate-200 p-3.5 hover:border-blue-300 hover:shadow-sm transition-all group"
+        className="w-48 flex-shrink-0 bg-white rounded-xl border border-slate-200 p-3.5 hover:border-blue-300 hover:shadow-sm transition-all group"
       >
         {/* 단계 배지 + 편집 버튼 */}
         <div className="flex items-center justify-between mb-2.5">
@@ -141,7 +151,6 @@ function KanbanView({
           ) : (
             <span />
           )}
-          {/* 계약금●  잔금● */}
           <div className="flex items-center gap-1.5">
             <span
               className={`flex items-center gap-0.5 text-[10px] font-medium ${
@@ -167,11 +176,73 @@ function KanbanView({
     );
   };
 
-  // 그룹에 속하지 않는 프로젝트
+  // 미분류
   const allGrouped = STAGE_GROUPS.flatMap((g) => g.stages as string[]);
   const uncategorized = projects.filter(
     (p) => !allGrouped.includes(p.pipeline_stage ?? "")
   );
+
+  const renderRow = (
+    label: string,
+    gProjects: Project[],
+    stageBadge: string,
+    headerSlot: React.ReactNode,
+  ) => {
+    const totalPages = Math.max(1, Math.ceil(gProjects.length / ITEMS_PER_PAGE));
+    const currentPage = Math.min(pages[label] ?? 0, totalPages - 1);
+    const pageProjects = gProjects.slice(
+      currentPage * ITEMS_PER_PAGE,
+      (currentPage + 1) * ITEMS_PER_PAGE,
+    );
+
+    return (
+      <div key={label} className="flex min-h-[120px]">
+        {/* 좌측 헤더 */}
+        {headerSlot}
+
+        {/* 카드 영역 */}
+        <div className="flex-1 flex flex-col justify-between px-4 py-4 gap-3 min-w-0">
+          {/* 카드 행 */}
+          {gProjects.length > 0 ? (
+            <div className="flex gap-3 flex-wrap">
+              {pageProjects.map((p) => renderCard(p, stageBadge))}
+              {/* 빈 자리 placeholder — 레이아웃 높이 고정 */}
+              {Array.from({ length: ITEMS_PER_PAGE - pageProjects.length }).map((_, i) => (
+                <div key={`empty-${i}`} className="w-48 flex-shrink-0" />
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center h-full">
+              <p className="text-[11px] text-slate-300">프로젝트 없음</p>
+            </div>
+          )}
+
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end gap-1.5">
+              <button
+                onClick={() => setPage(label, currentPage - 1)}
+                disabled={currentPage === 0}
+                className="w-6 h-6 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:border-blue-300 hover:text-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <CaretLeft size={11} weight="bold" />
+              </button>
+              <span className="text-[11px] text-slate-500 font-medium tabular-nums min-w-[3rem] text-center">
+                {currentPage + 1} / {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(label, currentPage + 1)}
+                disabled={currentPage >= totalPages - 1}
+                className="w-6 h-6 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:border-blue-300 hover:text-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <CaretRight size={11} weight="bold" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-200">
@@ -182,61 +253,40 @@ function KanbanView({
         const total = gProjects.reduce((s, p) => s + (p.contract_amount ?? 0), 0);
         const totalMan = Math.floor(total / 10000);
 
-        return (
-          <div key={group.label} className="flex min-h-[100px]">
-            {/* 그룹 헤더 (고정 좌측) */}
-            <div
-              className={`w-32 flex-shrink-0 ${group.headerBg} border-r ${group.headerBorder} px-4 py-4 flex flex-col gap-1`}
-            >
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${group.dot}`} />
-                <span className={`text-xs font-bold ${group.labelColor}`}>
-                  {group.label}
-                </span>
-              </div>
-              <span className="text-[11px] text-slate-500 pl-4">
-                {gProjects.length}개
+        const header = (
+          <div
+            className={`w-32 flex-shrink-0 ${group.headerBg} border-r ${group.headerBorder} px-4 py-4 flex flex-col gap-1`}
+          >
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${group.dot}`} />
+              <span className={`text-xs font-bold ${group.labelColor}`}>{group.label}</span>
+            </div>
+            <span className="text-[11px] text-slate-500 pl-4">{gProjects.length}개</span>
+            {totalMan > 0 && (
+              <span className="text-[11px] font-semibold text-slate-600 pl-4">
+                {totalMan.toLocaleString("ko-KR")}만원
               </span>
-              {totalMan > 0 && (
-                <span className="text-[11px] font-semibold text-slate-600 pl-4">
-                  {totalMan.toLocaleString("ko-KR")}만원
-                </span>
-              )}
-            </div>
-
-            {/* 카드 영역 (가로 스크롤) */}
-            <div className="flex-1 overflow-x-auto px-4 py-4">
-              {gProjects.length > 0 ? (
-                <div className="flex gap-3 min-w-max">
-                  {gProjects.map((p) => renderCard(p, group.stageBadge))}
-                </div>
-              ) : (
-                <div className="h-full flex items-center">
-                  <p className="text-[11px] text-slate-300">프로젝트 없음</p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         );
+
+        return renderRow(group.label, gProjects, group.stageBadge, header);
       })}
 
       {/* 미분류 */}
-      {uncategorized.length > 0 && (
-        <div className="flex min-h-[80px]">
+      {uncategorized.length > 0 &&
+        renderRow(
+          "미분류",
+          uncategorized,
+          "bg-amber-100 text-amber-700",
           <div className="w-32 flex-shrink-0 bg-amber-50 border-r border-amber-100 px-4 py-4 flex flex-col gap-1">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0" />
               <span className="text-xs font-bold text-amber-700">미분류</span>
             </div>
             <span className="text-[11px] text-slate-500 pl-4">{uncategorized.length}개</span>
-          </div>
-          <div className="flex-1 overflow-x-auto px-4 py-4">
-            <div className="flex gap-3 min-w-max">
-              {uncategorized.map((p) => renderCard(p, "bg-amber-100 text-amber-700"))}
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+        )}
     </div>
   );
 }
