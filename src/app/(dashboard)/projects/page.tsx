@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Plus, FolderOpen, PencilSimple, Trash, Buildings, Rows, Kanban } from "@phosphor-icons/react";
+import { FolderOpen, PencilSimple, Trash, Buildings, Rows, Kanban } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ProjectFormDialog } from "@/components/projects/ProjectFormDialog";
@@ -165,6 +165,7 @@ export default function ProjectsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // 프로젝트 생성은 고객 상세 페이지에서만 가능 — 여기서는 편집 다이얼로그만 사용
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -208,21 +209,15 @@ export default function ProjectsPage() {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {/* 뷰 전환 */}
-          <div className="flex items-center rounded-lg border border-slate-200 overflow-hidden">
-            <button onClick={() => setView("kanban")}
-              className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-colors ${view === 'kanban' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
-              <Kanban size={14} />칸반
-            </button>
-            <button onClick={() => setView("list")}
-              className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-colors ${view === 'list' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
-              <Rows size={14} />리스트
-            </button>
-          </div>
-          <button onClick={() => { setEditingProject(null); setDialogOpen(true); }}
-            className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">
-            <Plus size={16} />새 프로젝트
+        {/* 뷰 전환 */}
+        <div className="flex items-center rounded-lg border border-slate-200 overflow-hidden">
+          <button onClick={() => setView("kanban")}
+            className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-colors ${view === 'kanban' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
+            <Kanban size={14} />칸반
+          </button>
+          <button onClick={() => setView("list")}
+            className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-colors ${view === 'list' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
+            <Rows size={14} />리스트
           </button>
         </div>
       </div>
@@ -242,7 +237,7 @@ export default function ProjectsPage() {
         </div>
       ) : projects.length === 0 ? (
         <EmptyState icon={FolderOpen} title="프로젝트가 없습니다"
-          description="새 프로젝트 버튼을 눌러 첫 번째 프로젝트를 추가해 보세요." />
+          description="고객 상세 페이지의 '프로젝트' 탭에서 새 프로젝트를 추가하세요." />
       ) : view === "kanban" ? (
         <KanbanView projects={projects} clients={clients} onEdit={handleEdit} />
       ) : (

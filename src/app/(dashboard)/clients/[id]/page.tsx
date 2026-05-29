@@ -24,6 +24,7 @@ import { ClientFormSheet } from "@/components/clients/ClientFormSheet";
 import { InvoiceFormDialog } from "@/components/invoices/InvoiceFormDialog";
 import { EstimateFormDialog } from "@/components/estimates/EstimateFormDialog";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
+import { ProjectFormDialog } from "@/components/projects/ProjectFormDialog";
 import {
   fetchClient,
   fetchClientProjects,
@@ -99,6 +100,7 @@ export default function ClientDetailPage() {
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [estimateDialogOpen, setEstimateDialogOpen] = useState(false);
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -423,11 +425,25 @@ export default function ClientDetailPage() {
             <TabsContent value="projects">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-outfit font-semibold text-slate-800 text-sm">프로젝트</h2>
+                <button
+                  onClick={() => setProjectDialogOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs font-medium text-white transition-colors"
+                >
+                  <Plus size={12} weight="regular" />
+                  새 프로젝트
+                </button>
               </div>
               <div className="space-y-3">
                 {projects.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center">
                     <p className="text-sm text-slate-400">등록된 프로젝트가 없습니다.</p>
+                    <button
+                      onClick={() => setProjectDialogOpen(true)}
+                      className="mt-3 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700"
+                    >
+                      <Plus size={12} weight="regular" />
+                      첫 프로젝트 만들기
+                    </button>
                   </div>
                 ) : (
                   projects.map((project) => (
@@ -438,18 +454,33 @@ export default function ClientDetailPage() {
                     >
                       <div className="flex items-center justify-between gap-3 mb-2">
                         <h3 className="font-outfit font-medium text-slate-900 text-sm">{project.title}</h3>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${projectStatusClass[project.status] ?? ""}`}>
-                          {projectStatusLabel[project.status] ?? project.status}
-                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[10px] bg-slate-100 text-slate-600 rounded-full px-2 py-0.5">
+                            {project.pipeline_stage}
+                          </span>
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${projectStatusClass[project.status] ?? ""}`}>
+                            {projectStatusLabel[project.status] ?? project.status}
+                          </span>
+                        </div>
                       </div>
                       {project.description && (
                         <p className="text-xs text-slate-500 mb-2 line-clamp-1">{project.description}</p>
                       )}
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full bg-slate-100">
-                          <div className="h-full rounded-full bg-blue-500" style={{ width: `${project.progress}%` }} />
-                        </div>
-                        <span className="text-xs text-slate-400 shrink-0">{project.progress}%</span>
+                      <div className="flex items-center gap-3">
+                        {project.contract_amount != null && (
+                          <span className="text-xs font-semibold text-slate-700">
+                            {project.contract_amount.toLocaleString("ko-KR")}원
+                          </span>
+                        )}
+                        {project.deadline && (
+                          <span className="text-xs text-slate-400">마감 {project.deadline}</span>
+                        )}
+                        {project.deposit_paid && (
+                          <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-full">계약금✓</span>
+                        )}
+                        {project.final_paid && (
+                          <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded-full">잔금✓</span>
+                        )}
                       </div>
                     </Link>
                   ))
@@ -627,6 +658,16 @@ export default function ClientDetailPage() {
         onClose={() => setContractDialogOpen(false)}
         clients={client ? [client] : []}
         onSaved={() => { setContractDialogOpen(false); loadAll(); }}
+      />
+
+      {/* 프로젝트 생성 Dialog — 클라이언트 고정 */}
+      <ProjectFormDialog
+        open={projectDialogOpen}
+        onClose={() => setProjectDialogOpen(false)}
+        project={null}
+        clients={client ? [client] : []}
+        defaultClientId={id}
+        onSaved={() => { setProjectDialogOpen(false); loadAll(); }}
       />
     </div>
   );

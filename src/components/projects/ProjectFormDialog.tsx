@@ -32,11 +32,13 @@ interface ProjectFormDialogProps {
   project?: Project | null;
   clients: ClientWithRevenue[];
   onSaved: () => void;
+  /** 고객 페이지에서 열 때 미리 고정할 client_id */
+  defaultClientId?: string;
 }
 
 const NONE_VALUE = "__none__";
 
-export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: ProjectFormDialogProps) {
+export function ProjectFormDialog({ open, onClose, project, clients, onSaved, defaultClientId }: ProjectFormDialogProps) {
   const isEdit = !!project;
 
   const [title, setTitle] = useState("");
@@ -61,7 +63,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
       setTitle(project?.title ?? "");
       setDescription(project?.description ?? "");
       setStatus(project?.status ?? "active");
-      setClientId(project?.client_id ?? NONE_VALUE);
+      setClientId(project?.client_id ?? defaultClientId ?? NONE_VALUE);
       setPipelineStage(project?.pipeline_stage ?? "상담");
       setServiceType(project?.service_type ?? "");
       setContractAmount(project?.contract_amount?.toString() ?? "");
@@ -194,23 +196,26 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
 
           {/* 클라이언트 + 마감일 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-sm text-slate-700 font-medium">클라이언트</Label>
-              <Select value={clientId} onValueChange={(v) => setClientId(v ?? NONE_VALUE)}>
-                <SelectTrigger className="font-outfit">
-                  <SelectValue>
-                    {clientId === NONE_VALUE
-                      ? "없음"
-                      : (clients.find((c) => c.id === clientId)?.company_name ?? "없음")}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE_VALUE}>없음</SelectItem>
-                  {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
+            {/* 고객 페이지에서 열면 클라이언트 고정 — 필드 숨김 */}
+            {!defaultClientId && (
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-sm text-slate-700 font-medium">클라이언트</Label>
+                <Select value={clientId} onValueChange={(v) => setClientId(v ?? NONE_VALUE)}>
+                  <SelectTrigger className="font-outfit">
+                    <SelectValue>
+                      {clientId === NONE_VALUE
+                        ? "없음"
+                        : (clients.find((c) => c.id === clientId)?.company_name ?? "없음")}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_VALUE}>없음</SelectItem>
+                    {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className={`flex flex-col gap-1.5 ${defaultClientId ? "col-span-2" : ""}`}>
               <Label htmlFor="project-deadline" className="text-sm text-slate-700 font-medium">마감일</Label>
               <Input id="project-deadline" type="date" value={deadline}
                 onChange={(e) => setDeadline(e.target.value)} className="font-outfit" />
