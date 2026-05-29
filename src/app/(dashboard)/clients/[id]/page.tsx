@@ -21,8 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/clients/StatusBadge";
 import { ClientFormSheet } from "@/components/clients/ClientFormSheet";
 import { InvoiceFormDialog } from "@/components/invoices/InvoiceFormDialog";
-import { EstimateFormDialog } from "@/components/estimates/EstimateFormDialog";
-import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import {
   fetchClient,
   fetchClientProjects,
@@ -51,14 +49,12 @@ const projectStatusClass: Record<string, string> = {
 };
 
 const estimateStatusLabel: Record<string, string> = {
-  pending: "검토중",
-  accepted: "수락",
+  pending: "발송됨",
   expired: "만료",
 };
 
 const estimateStatusClass: Record<string, string> = {
-  pending: "bg-amber-50 text-amber-700 border border-amber-200",
-  accepted: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  pending: "bg-blue-50 text-blue-700 border border-blue-200",
   expired: "bg-slate-100 text-slate-500 border border-slate-200",
 };
 
@@ -96,8 +92,6 @@ export default function ClientDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-  const [estimateDialogOpen, setEstimateDialogOpen] = useState(false);
-  const [contractDialogOpen, setContractDialogOpen] = useState(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -483,20 +477,20 @@ export default function ClientDetailPage() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-outfit font-semibold text-slate-800 text-sm">견적·계약</h2>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setEstimateDialogOpen(true)}
+                  <Link
+                    href={`/estimates/new?client_id=${id}`}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 transition-colors"
                   >
                     <Plus size={12} weight="regular" />
                     새 견적서
-                  </button>
-                  <button
-                    onClick={() => setContractDialogOpen(true)}
+                  </Link>
+                  <Link
+                    href={`/contracts/new?client_id=${id}`}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
                   >
                     <Plus size={12} weight="regular" />
                     새 계약서
-                  </button>
+                  </Link>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -634,21 +628,6 @@ export default function ClientDetailPage() {
         onSaved={() => { setInvoiceDialogOpen(false); loadAll(); }}
       />
 
-      {/* 견적서 Dialog */}
-      <EstimateFormDialog
-        open={estimateDialogOpen}
-        onClose={() => setEstimateDialogOpen(false)}
-        clients={client ? [client] : []}
-        onSaved={() => { setEstimateDialogOpen(false); loadAll(); }}
-      />
-
-      {/* 계약서 Dialog */}
-      <ContractFormDialog
-        open={contractDialogOpen}
-        onClose={() => setContractDialogOpen(false)}
-        clients={client ? [client] : []}
-        onSaved={() => { setContractDialogOpen(false); loadAll(); }}
-      />
     </div>
   );
 }

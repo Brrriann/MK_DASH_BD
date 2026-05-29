@@ -2,8 +2,8 @@ export type ClientStatus = "active" | "potential" | "dormant" | "ended";
 export type TaskStatus = "todo" | "in_progress" | "done" | "on_hold";
 export type TaskPriority = "high" | "medium" | "low";
 export type MeetingMethod = "in_person" | "video" | "phone" | "email";
-export type EstimateStatus = "pending" | "accepted" | "expired";
-export type ContractStatus = "signed" | "pending" | "expired" | "signature_requested";
+export type EstimateStatus = "pending" | "expired";
+export type ContractStatus = "signed" | "pending" | "expired";
 export type ProjectStatus = "active" | "completed" | "on_hold";
 export type PipelineStage = '상담' | '견적' | '계약' | '계산서발행' | '계약입금' | '착수' | '납품' | '완납';
 export type ServiceType = '명함' | '로고' | '웹사이트' | '쇼핑몰' | '앱' | '광고소재' | 'SNS관리' | '영상편집' | '기타';
@@ -164,8 +164,6 @@ export interface Estimate {
   created_at: string;
 }
 
-export type InteractionType = 'call' | 'kakao' | 'email' | 'meeting' | 'memo';
-
 export interface Interaction {
   id: string;
   lead_id: string | null;
@@ -177,9 +175,6 @@ export interface Interaction {
   follow_up_at: string | null;
   created_at: string;
 }
-
-export type LeadStatus = '신규' | '연락중' | '견적발송' | '계약' | '실패' | '보류';
-export type LeadSource = '숨고' | '크몽' | '위시캣' | '라우드소싱' | 'Fiverr' | '직접문의' | '기타';
 
 export interface Lead {
   id: string;

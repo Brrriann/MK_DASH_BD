@@ -6,8 +6,8 @@ import { FilePdf, CheckCircle, Circle } from "@phosphor-icons/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 // ---- Type helpers ----
-type EstimateStatus = "pending" | "accepted" | "expired";
-type ContractStatus = "signed" | "pending" | "expired" | "signature_requested";
+type EstimateStatus = "pending" | "expired";
+type ContractStatus = "signed" | "pending" | "expired";
 
 interface EstimateRow {
   id: string;
@@ -65,13 +65,11 @@ function formatDate(s: string) {
 
 // ---- Estimate badges ----
 const estimateStatusLabel: Record<EstimateStatus, string> = {
-  pending: "검토중",
-  accepted: "수락",
+  pending: "발송됨",
   expired: "만료",
 };
 const estimateStatusClass: Record<EstimateStatus, string> = {
-  pending: "bg-amber-50 text-amber-700 border border-amber-200",
-  accepted: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  pending: "bg-blue-50 text-blue-700 border border-blue-200",
   expired: "bg-slate-100 text-slate-500 border border-slate-200",
 };
 
@@ -80,13 +78,11 @@ const contractStatusLabel: Record<ContractStatus, string> = {
   signed: "서명완료",
   pending: "대기중",
   expired: "만료",
-  signature_requested: "서명요청",
 };
 const contractStatusClass: Record<ContractStatus, string> = {
   signed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   pending: "bg-amber-50 text-amber-700 border border-amber-200",
   expired: "bg-slate-100 text-slate-500 border border-slate-200",
-  signature_requested: "bg-blue-50 text-blue-700 border border-blue-200",
 };
 
 function StatusBadge({ label, cls }: { label: string; cls: string }) {
