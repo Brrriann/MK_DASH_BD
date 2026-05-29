@@ -1,4 +1,6 @@
-import { createBrowserClient } from "@supabase/ssr";
+"use server";
+
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Project, ProjectStatus, PipelineStage, ServiceType, SourceChannel } from "@/lib/types";
 
 export type CreateProjectInput = {
@@ -19,25 +21,22 @@ export type CreateProjectInput = {
   source_channel?: SourceChannel | null;
 };
 
-function getClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
-
-export async function fetchProjects(): Promise<Project[]> {
-  const supabase = getClient();
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as Project[];
+export async function fetchProjects(): Promise<{ projects: Project[]; error?: string }> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) return { projects: [], error: error.message };
+    return { projects: (data ?? []) as Project[] };
+  } catch (err) {
+    return { projects: [], error: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 export async function fetchProject(id: string): Promise<Project | null> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("projects")
     .select("*")
@@ -45,13 +44,13 @@ export async function fetchProject(id: string): Promise<Project | null> {
     .single();
   if (error) {
     if (error.code === "PGRST116") return null;
-    throw error;
+    throw new Error(error.message);
   }
   return data as Project;
 }
 
 export async function createProject(data: CreateProjectInput): Promise<Project> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: project, error } = await supabase
     .from("projects")
     .insert({
@@ -60,7 +59,7 @@ export async function createProject(data: CreateProjectInput): Promise<Project> 
       status: data.status ?? "active",
       progress: data.progress ?? 0,
       client_id: data.client_id ?? null,
-      pipeline_stage: data.pipeline_stage ?? '상담',
+      pipeline_stage: data.pipeline_stage ?? "상담",
       service_type: data.service_type ?? null,
       contract_amount: data.contract_amount ?? null,
       deposit_ratio: data.deposit_ratio ?? 50,
@@ -73,24 +72,24 @@ export async function createProject(data: CreateProjectInput): Promise<Project> 
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return project;
 }
 
 export async function updateProject(id: string, data: Partial<Project>): Promise<Project> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: project, error } = await supabase
     .from("projects")
     .update({ ...data, updated_at: new Date().toISOString() })
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return project;
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("projects").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }

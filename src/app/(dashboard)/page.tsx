@@ -10,6 +10,7 @@ const getDashboardData = unstable_cache(
   async () => {
     const supabase = createAdminClient();
     const today = new Date().toISOString().split("T")[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
     const sevenDaysLater = new Date(Date.now() + 7 * 86400000)
       .toISOString()
       .split("T")[0];
@@ -18,6 +19,7 @@ const getDashboardData = unstable_cache(
       { data: overdueLeads },
       { data: pipelineLeads },
       { data: todayFollowups },
+      { data: tomorrowFollowups },
       { data: recentProjects },
       { data: unpaidContracts },
       { data: unpaidInvoices },
@@ -42,6 +44,12 @@ const getDashboardData = unstable_cache(
         .from("leads")
         .select("id,name,company,source,follow_up_at")
         .eq("follow_up_at", today),
+
+      // 내일 팔로업 (Promise.all 인덱스 +1 됨 → 아래 구조분해 순서 주의)
+      supabase
+        .from("leads")
+        .select("id,name,company,source,follow_up_at")
+        .eq("follow_up_at", tomorrow),
 
       // 마감 임박 프로젝트 (7일 이내)
       supabase
@@ -91,6 +99,13 @@ const getDashboardData = unstable_cache(
       }[],
       pipelineLeads: (pipelineLeads ?? []) as { status: string }[],
       todayFollowups: (todayFollowups ?? []) as {
+        id: string;
+        name: string;
+        company: string | null;
+        source: string;
+        follow_up_at: string | null;
+      }[],
+      tomorrowFollowups: (tomorrowFollowups ?? []) as {
         id: string;
         name: string;
         company: string | null;
@@ -164,6 +179,7 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TodayFollowupWidget
           followups={data.todayFollowups}
+          tomorrowFollowups={data.tomorrowFollowups}
           projects={data.recentProjects}
         />
         <UnpaidWidget

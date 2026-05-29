@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error("Supabase Storage upload error:", error);
-    if (error.message.includes("not found")) {
+    // Likely the bucket doesn't exist
+    if (error.message.includes("Bucket not found") || error.message.includes("not found")) {
       return NextResponse.json(
         { error: `Supabase Storage 버킷 '${BUCKET}'이 없습니다. Supabase 대시보드에서 '${BUCKET}' 버킷을 먼저 생성해주세요.` },
         { status: 500 }

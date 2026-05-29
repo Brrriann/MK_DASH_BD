@@ -1,9 +1,9 @@
-import { createBrowserClient } from "@supabase/ssr";
-import type { Contract } from "@/lib/types";
+"use server";
+
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Contract, ContractStatus } from "@/lib/types";
 
 export type { Contract };
-
-import type { ContractStatus } from "@/lib/types";
 
 export type CreateContractInput = {
   title: string;
@@ -30,18 +30,11 @@ export type CreateContractInput = {
   signed_pdf_url?: string | null;
 };
 
-function getClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
-
 export async function fetchContracts(params?: {
   clientId?: string;
   status?: string;
 }): Promise<Contract[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   let query = supabase
     .from("contracts")
     .select("*")
@@ -56,12 +49,12 @@ export async function fetchContracts(params?: {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Contract[];
 }
 
 export async function createContract(data: CreateContractInput): Promise<Contract> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: contract, error } = await supabase
     .from("contracts")
     .insert({
@@ -83,7 +76,7 @@ export async function createContract(data: CreateContractInput): Promise<Contrac
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return contract as Contract;
 }
 
@@ -91,19 +84,19 @@ export async function updateContract(
   id: string,
   data: Partial<Contract>
 ): Promise<Contract> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: contract, error } = await supabase
     .from("contracts")
     .update(data)
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return contract as Contract;
 }
 
 export async function deleteContract(id: string): Promise<void> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("contracts").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }

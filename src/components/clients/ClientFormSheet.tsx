@@ -18,8 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient, updateClient, type CreateClientInput } from "@/lib/actions/clients";
-import { revalidateClients } from "@/lib/actions/revalidate";
+import { createClientAction, updateClientAction, type ClientInput as CreateClientInput } from "@/lib/actions/client-actions";
 import type { Client, ClientStatus } from "@/lib/types";
 
 interface ClientFormSheetProps {
@@ -144,14 +143,13 @@ export function ClientFormSheet({
       };
 
       if (isEdit && client) {
-        await updateClient(client.id, payload);
+        await updateClientAction(client.id, payload);
       } else {
-        await createClient(payload);
+        await createClientAction(payload);
       }
 
       onSuccess();
       onOpenChange(false);
-      revalidateClients().catch(() => {});
     } catch (err) {
       setErrors({ general: err instanceof Error ? err.message : "저장 중 오류가 발생했습니다. 다시 시도해 주세요." });
     } finally {
@@ -314,7 +312,9 @@ export function ClientFormSheet({
               onValueChange={(val) => val && handleChange("status", val)}
             >
               <SelectTrigger className="h-9 text-sm w-full">
-                <SelectValue placeholder="상태 선택" />
+                <SelectValue>
+                  {statusOptions.find((o) => o.value === formData.status)?.label ?? formData.status}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((opt) => (
@@ -339,7 +339,7 @@ export function ClientFormSheet({
               onValueChange={(val) => handleChange("source", val ?? "")}
             >
               <SelectTrigger className="h-9 text-sm w-full">
-                <SelectValue placeholder="인입경로 선택" />
+                <SelectValue>{formData.source || "인입경로 선택"}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {SOURCE_OPTIONS.map((opt) => (

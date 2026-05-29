@@ -17,9 +17,8 @@ import type { Lead, LeadStatus } from "@/lib/types";
 import {
   updateLeadStatus,
   deleteLead,
-  convertLeadToClient,
 } from "@/lib/actions/lead-actions";
-import { InteractionFormSheet } from "@/components/interactions/InteractionFormSheet";
+import { ConvertLeadDialog } from "./ConvertLeadDialog";
 
 const STATUS_COLUMNS: {
   status: LeadStatus;
@@ -106,7 +105,7 @@ interface LeadCardProps {
   today: string;
   onStatusChange: (id: string, status: LeadStatus) => void;
   onDelete: (id: string) => void;
-  onConvert: (id: string) => void;
+  onConvert: (lead: Lead) => void;
   isPending: boolean;
 }
 
@@ -277,7 +276,7 @@ function LeadCard({
           {/* 고객 전환 버튼 (계약 + 미전환일 때만) */}
           {canConvert && (
             <button
-              onClick={() => onConvert(lead.id)}
+              onClick={() => onConvert(lead)}
               className="flex items-center gap-1 rounded-lg border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
             >
               <ArrowsClockwise size={12} />
@@ -357,6 +356,7 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
   const [optimisticStatuses, setOptimisticStatuses] = useState<
     Record<string, LeadStatus>
   >({});
+  const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
 
   function handleStatusChange(id: string, status: LeadStatus) {
     setOptimisticStatuses((prev) => ({ ...prev, [id]: status }));
@@ -391,23 +391,6 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
     });
   }
 
-  function handleConvert(id: string) {
-    if (
-      !confirm(
-        "이 리드를 고객으로 전환하시겠습니까? 새 고객 레코드가 생성됩니다."
-      )
-    )
-      return;
-    startTransition(async () => {
-      try {
-        await convertLeadToClient(id);
-        router.refresh();
-      } catch (err) {
-        alert(err instanceof Error ? err.message : "전환에 실패했습니다.");
-      }
-    });
-  }
-
   // 각 리드에 낙관적 상태 적용
   const displayLeads = leads.map((l) => ({
     ...l,
@@ -431,13 +414,18 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
         </div>
         <p className="text-sm font-medium text-slate-600">리드가 없습니다</p>
         <p className="text-xs text-slate-400 mt-1">
-          우측 상단의 "리드 추가" 버튼으로 첫 리드를 등록하세요
+          우측 상단의 &ldquo;리드 추가&rdquo; 버튼으로 첫 리드를 등록하세요
         </p>
       </div>
     );
   }
 
   return (
+    <>
+    <ConvertLeadDialog
+      lead={convertingLead}
+      onClose={() => setConvertingLead(null)}
+    />
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {STATUS_COLUMNS.map((col) => {
         const colLeads = grouped[col.status] ?? [];
@@ -472,7 +460,7 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
                     today={today}
                     onStatusChange={handleStatusChange}
                     onDelete={handleDelete}
-                    onConvert={handleConvert}
+                    onConvert={setConvertingLead}
                     isPending={
                       isPending && optimisticStatuses[lead.id] !== undefined
                     }
@@ -484,5 +472,6 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
         );
       })}
     </div>
+    </>
   );
 }

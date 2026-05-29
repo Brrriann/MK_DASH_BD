@@ -11,13 +11,19 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { createProject, updateProject, type CreateProjectInput } from "@/lib/actions/projects";
-import { revalidateProjects } from "@/lib/actions/revalidate";
+import type { CreateProjectInput } from "@/lib/actions/projects";
 import type { Project, ClientWithRevenue, ProjectStatus, PipelineStage, ServiceType, SourceChannel } from "@/lib/types";
+import { TASK_TEMPLATES } from "@/lib/task-templates";
 
 const PIPELINE_STAGES: PipelineStage[] = ['상담', '견적', '계약', '계산서발행', '계약입금', '착수', '납품', '완납'];
-const SERVICE_TYPES: ServiceType[] = ['명함', '로고', '웹사이트', '쇼핑몰', '앱', '광고소재', 'SNS관리', '영상편집', '기타'];
+const SERVICE_TYPES: ServiceType[] = ['웹개발', '앱개발', '소프트웨어개발', '디자인', '영상', '강의/컨설팅', '기타'];
 const SOURCE_CHANNELS: SourceChannel[] = ['숨고', '크몽', '위시캣', '라우드소싱', 'Fiverr', '직접문의', '재구매', '기타'];
+
+const PROJECT_STATUS_LABELS: Record<string, string> = {
+  active: "진행중",
+  completed: "완료",
+  on_hold: "보류",
+};
 
 interface ProjectFormDialogProps {
   open: boolean;
@@ -25,11 +31,13 @@ interface ProjectFormDialogProps {
   project?: Project | null;
   clients: ClientWithRevenue[];
   onSaved: () => void;
+  /** 고객 페이지에서 열 때 미리 고정할 client_id */
+  defaultClientId?: string;
 }
 
 const NONE_VALUE = "__none__";
 
-export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: ProjectFormDialogProps) {
+export function ProjectFormDialog({ open, onClose, project, clients, onSaved, defaultClientId }: ProjectFormDialogProps) {
   const isEdit = !!project;
 
   const [title, setTitle] = useState("");
@@ -47,13 +55,14 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
   const [sourceChannel, setSourceChannel] = useState<SourceChannel | "">("") ;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [autoCreateTasks, setAutoCreateTasks] = useState(true);
 
   useEffect(() => {
     if (open) {
       setTitle(project?.title ?? "");
       setDescription(project?.description ?? "");
       setStatus(project?.status ?? "active");
-      setClientId(project?.client_id ?? NONE_VALUE);
+      setClientId(project?.client_id ?? defaultClientId ?? NONE_VALUE);
       setPipelineStage(project?.pipeline_stage ?? "상담");
       setServiceType(project?.service_type ?? "");
       setContractAmount(project?.contract_amount?.toString() ?? "");
@@ -91,14 +100,30 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
     };
 
     try {
+      // opennextjs-cloudflare 환경에서 서버 액션 POST 가 실패하므로 API 라우트 사용
       if (isEdit && project) {
-        await updateProject(project.id, data);
+        const res = await fetch(`/api/projects/${project.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error ?? `수정 실패 (${res.status})`);
+        }
       } else {
-        await createProject(data);
+        const res = await fetch(`/api/projects`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...data, autoCreateTasks }),
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error ?? `생성 실패 (${res.status})`);
+        }
       }
       onSaved();
       onClose();
-      revalidateProjects().catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "저장에 실패했습니다.");
     } finally {
@@ -137,7 +162,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">파이프라인 단계</Label>
               <Select value={pipelineStage} onValueChange={(v) => setPipelineStage(v as PipelineStage)}>
-                <SelectTrigger className="font-outfit"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="font-outfit"><SelectValue>{pipelineStage}</SelectValue></SelectTrigger>
                 <SelectContent>
                   {PIPELINE_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
@@ -146,7 +171,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">상태</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>
-                <SelectTrigger className="font-outfit"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="font-outfit"><SelectValue>{PROJECT_STATUS_LABELS[status] ?? status}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">진행중</SelectItem>
                   <SelectItem value="completed">완료</SelectItem>
@@ -161,7 +186,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">서비스 유형</Label>
               <Select value={serviceType || NONE_VALUE} onValueChange={(v) => setServiceType(v === NONE_VALUE ? "" : v as ServiceType)}>
-                <SelectTrigger className="font-outfit"><SelectValue placeholder="선택 (선택사항)" /></SelectTrigger>
+                <SelectTrigger className="font-outfit"><SelectValue>{serviceType || "선택 안함"}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE_VALUE}>선택 안함</SelectItem>
                   {SERVICE_TYPES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -171,7 +196,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
             <div className="flex flex-col gap-1.5">
               <Label className="text-sm text-slate-700 font-medium">유입 채널</Label>
               <Select value={sourceChannel || NONE_VALUE} onValueChange={(v) => setSourceChannel(v === NONE_VALUE ? "" : v as SourceChannel)}>
-                <SelectTrigger className="font-outfit"><SelectValue placeholder="선택 (선택사항)" /></SelectTrigger>
+                <SelectTrigger className="font-outfit"><SelectValue>{sourceChannel || "선택 안함"}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE_VALUE}>선택 안함</SelectItem>
                   {SOURCE_CHANNELS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -182,17 +207,26 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
 
           {/* 클라이언트 + 마감일 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-sm text-slate-700 font-medium">클라이언트</Label>
-              <Select value={clientId} onValueChange={(v) => setClientId(v ?? NONE_VALUE)}>
-                <SelectTrigger className="font-outfit"><SelectValue placeholder="선택 (선택사항)" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE_VALUE}>없음</SelectItem>
-                  {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
+            {/* 고객 페이지에서 열면 클라이언트 고정 — 필드 숨김 */}
+            {!defaultClientId && (
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-sm text-slate-700 font-medium">클라이언트</Label>
+                <Select value={clientId} onValueChange={(v) => setClientId(v ?? NONE_VALUE)}>
+                  <SelectTrigger className="font-outfit">
+                    <SelectValue>
+                      {clientId === NONE_VALUE
+                        ? "없음"
+                        : (clients.find((c) => c.id === clientId)?.company_name ?? "없음")}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_VALUE}>없음</SelectItem>
+                    {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className={`flex flex-col gap-1.5 ${defaultClientId ? "col-span-2" : ""}`}>
               <Label htmlFor="project-deadline" className="text-sm text-slate-700 font-medium">마감일</Label>
               <Input id="project-deadline" type="date" value={deadline}
                 onChange={(e) => setDeadline(e.target.value)} className="font-outfit" />
@@ -231,6 +265,27 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
               )}
             </div>
           </div>
+
+          {/* 체크리스트 자동 생성 (신규 + 서비스 유형 있을 때) */}
+          {!isEdit && !!serviceType && TASK_TEMPLATES[serviceType] && (
+            <label className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={autoCreateTasks}
+                onChange={(e) => setAutoCreateTasks(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div>
+                <p className="text-sm font-medium text-blue-800">
+                  체크리스트 자동 생성
+                </p>
+                <p className="text-xs text-blue-600 mt-0.5">
+                  {serviceType} 기본 {TASK_TEMPLATES[serviceType].length}개 항목
+                  ({TASK_TEMPLATES[serviceType].slice(0, 3).join(" → ")} ···)
+                </p>
+              </div>
+            </label>
+          )}
 
           {error && (
             <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>

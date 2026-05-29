@@ -1,4 +1,6 @@
-import { createBrowserClient } from "@supabase/ssr";
+"use server";
+
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { TaxInvoice, InvoiceItem } from "@/lib/types";
 
 export type { TaxInvoice };
@@ -17,17 +19,10 @@ export interface CreateInvoiceInput {
   project_id?: string | null;
 }
 
-function getClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
-
 export async function fetchInvoices(params?: {
   clientId?: string;
 }): Promise<TaxInvoice[]> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   let query = supabase
     .from("tax_invoices")
     .select("*")
@@ -38,12 +33,12 @@ export async function fetchInvoices(params?: {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as TaxInvoice[];
 }
 
 export async function createInvoice(data: CreateInvoiceInput): Promise<TaxInvoice> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: invoice, error } = await supabase
     .from("tax_invoices")
     .insert({
@@ -52,7 +47,7 @@ export async function createInvoice(data: CreateInvoiceInput): Promise<TaxInvoic
       supply_amount: data.supply_amount,
       tax_amount: data.tax_amount,
       total_amount: data.total_amount,
-      amount: data.total_amount,  // backward compat
+      amount: data.total_amount,
       issued_at: data.issued_at ?? new Date().toISOString(),
       memo: data.memo ?? null,
       client_id: data.client_id ?? null,
@@ -63,7 +58,7 @@ export async function createInvoice(data: CreateInvoiceInput): Promise<TaxInvoic
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return invoice as TaxInvoice;
 }
 
@@ -71,19 +66,19 @@ export async function updateInvoice(
   id: string,
   data: Partial<TaxInvoice>
 ): Promise<TaxInvoice> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { data: invoice, error } = await supabase
     .from("tax_invoices")
     .update(data)
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return invoice as TaxInvoice;
 }
 
 export async function deleteInvoice(id: string): Promise<void> {
-  const supabase = getClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("tax_invoices").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
