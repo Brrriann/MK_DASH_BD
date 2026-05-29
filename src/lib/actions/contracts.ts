@@ -49,7 +49,7 @@ export async function fetchContracts(params?: {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Contract[];
 }
 
@@ -76,7 +76,7 @@ export async function createContract(data: CreateContractInput): Promise<Contrac
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return contract as Contract;
 }
 
@@ -91,12 +91,12 @@ export async function updateContract(
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return contract as Contract;
 }
 
 export async function deleteContract(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("contracts").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }

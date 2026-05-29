@@ -34,7 +34,7 @@ export async function fetchTasks(clientId?: string): Promise<TaskWithClient[]> {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as TaskWithClient[];
 }
 
@@ -44,7 +44,7 @@ export async function fetchProjectOptions(): Promise<Project[]> {
     .from("projects")
     .select("*")
     .order("title", { ascending: true });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data ?? [];
 }
 
@@ -54,7 +54,7 @@ export async function fetchClients(): Promise<Client[]> {
     .from("clients")
     .select("*")
     .order("company_name", { ascending: true });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data ?? [];
 }
 
@@ -73,7 +73,7 @@ export async function createTask(data: CreateTaskInput): Promise<Task> {
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return task;
 }
 
@@ -85,7 +85,7 @@ export async function updateTask(id: string, data: Partial<Task>): Promise<Task>
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return task;
 }
 
@@ -95,13 +95,13 @@ export async function updateTaskStatus(id: string, status: TaskStatus): Promise<
     .from("tasks")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function deleteTask(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("tasks").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function fetchTaskMeetingNotes(taskId: string): Promise<MeetingNote[]> {
@@ -110,7 +110,7 @@ export async function fetchTaskMeetingNotes(taskId: string): Promise<MeetingNote
     .from("task_meeting_notes")
     .select(`meeting_note:meeting_notes(*)`)
     .eq("task_id", taskId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return ((data ?? []).map((row: any) => row.meeting_note).filter(Boolean)) as MeetingNote[];
 }

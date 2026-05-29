@@ -33,7 +33,7 @@ export async function fetchInvoices(params?: {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as TaxInvoice[];
 }
 
@@ -58,7 +58,7 @@ export async function createInvoice(data: CreateInvoiceInput): Promise<TaxInvoic
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return invoice as TaxInvoice;
 }
 
@@ -73,12 +73,12 @@ export async function updateInvoice(
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return invoice as TaxInvoice;
 }
 
 export async function deleteInvoice(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("tax_invoices").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }

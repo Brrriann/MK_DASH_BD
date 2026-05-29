@@ -49,7 +49,7 @@ export async function fetchClients(params?: {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as ClientWithRevenue[];
 }
 
@@ -88,7 +88,7 @@ export async function createClient(data: CreateClientInput): Promise<Client> {
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return client;
 }
 
@@ -100,14 +100,14 @@ export async function updateClient(id: string, data: Partial<Client>): Promise<C
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return client;
 }
 
 export async function deleteClient(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("clients").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function fetchClientProjects(clientId: string): Promise<Project[]> {
@@ -117,7 +117,7 @@ export async function fetchClientProjects(clientId: string): Promise<Project[]> 
     .select("*")
     .eq("client_id", clientId)
     .order("created_at", { ascending: false });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Project[];
 }
 
@@ -128,7 +128,7 @@ export async function fetchClientEstimates(clientId: string): Promise<Estimate[]
     .select("*")
     .eq("client_id", clientId)
     .order("issued_at", { ascending: false });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Estimate[];
 }
 
@@ -139,7 +139,7 @@ export async function fetchClientContracts(clientId: string): Promise<Contract[]
     .select("*")
     .eq("client_id", clientId)
     .order("created_at", { ascending: false });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Contract[];
 }
 
@@ -150,7 +150,7 @@ export async function fetchClientTaxInvoices(clientId: string): Promise<TaxInvoi
     .select("*")
     .eq("client_id", clientId)
     .order("issued_at", { ascending: false });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as TaxInvoice[];
 }
 
@@ -161,6 +161,6 @@ export async function fetchClientMeetingNotes(clientId: string): Promise<Meeting
     .select("*")
     .eq("client_id", clientId)
     .order("met_at", { ascending: false });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as MeetingNote[];
 }

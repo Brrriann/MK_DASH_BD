@@ -27,7 +27,7 @@ export async function fetchProjects(): Promise<Project[]> {
     .from("projects")
     .select("*")
     .order("created_at", { ascending: false });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Project[];
 }
 
@@ -68,7 +68,7 @@ export async function createProject(data: CreateProjectInput): Promise<Project> 
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return project;
 }
 
@@ -80,12 +80,12 @@ export async function updateProject(id: string, data: Partial<Project>): Promise
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return project;
 }
 
 export async function deleteProject(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("projects").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }

@@ -41,7 +41,7 @@ export async function fetchEstimates(params?: {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Estimate[];
 }
 
@@ -66,7 +66,7 @@ export async function createEstimate(data: CreateEstimateInput): Promise<Estimat
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return estimate as Estimate;
 }
 
@@ -81,12 +81,12 @@ export async function updateEstimate(
     .eq("id", id)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return estimate as Estimate;
 }
 
 export async function deleteEstimate(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("estimates").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }

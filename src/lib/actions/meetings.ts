@@ -34,7 +34,7 @@ export async function fetchMeetingNotes(
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as MeetingNoteWithClient[];
 }
 
@@ -50,7 +50,7 @@ export async function fetchMeetingNote(
 
   if (error) {
     if (error.code === "PGRST116") return null;
-    throw error;
+    throw new Error(error.message);
   }
   return data as MeetingNoteWithClient;
 }
@@ -65,7 +65,7 @@ export async function createMeetingNote(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data as MeetingNote;
 }
 
@@ -81,7 +81,7 @@ export async function updateMeetingNote(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data as MeetingNote;
 }
 
@@ -100,20 +100,20 @@ export async function upsertMeetingNote(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data as MeetingNote;
 }
 
 export async function deleteMeetingNote(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("meeting_notes").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function fetchAllAttendees(): Promise<string[]> {
   const supabase = createAdminClient();
   const { data, error } = await supabase.from("meeting_notes").select("attendees");
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 
   const allNames = (data ?? []).flatMap((row) => row.attendees as string[]);
   return [...new Set(allNames)].sort();
@@ -127,7 +127,7 @@ export async function linkTaskToMeeting(
   const { error } = await supabase
     .from("task_meeting_notes")
     .insert({ task_id: taskId, meeting_note_id: meetingNoteId });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function unlinkTaskFromMeeting(
@@ -140,5 +140,5 @@ export async function unlinkTaskFromMeeting(
     .delete()
     .eq("task_id", taskId)
     .eq("meeting_note_id", meetingNoteId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
