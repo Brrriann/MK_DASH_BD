@@ -29,7 +29,22 @@ export default async function InteractionsPage({
   searchParams: Promise<{ type?: string; q?: string }>;
 }) {
   const params = await searchParams;
-  const interactions = await getInteractions(params);
+  const supabase = createAdminClient();
+
+  const [interactions, { data: clientsList }, { data: leadsList }] =
+    await Promise.all([
+      getInteractions(params),
+      supabase
+        .from("clients")
+        .select("id, company_name, contact_name")
+        .order("company_name"),
+      supabase
+        .from("leads")
+        .select("id, name, company, status")
+        .not("status", "eq", "실패")
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
 
   return (
     <div className="font-outfit">
@@ -40,7 +55,10 @@ export default async function InteractionsPage({
             {interactions.length}
           </span>
         </div>
-        <InteractionFormSheet />
+        <InteractionFormSheet
+          clients={clientsList ?? []}
+          leads={leadsList ?? []}
+        />
       </div>
       <InteractionsFilterBar params={params} />
       <InteractionsList interactions={interactions} />

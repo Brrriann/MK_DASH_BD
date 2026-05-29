@@ -62,15 +62,10 @@ export async function updateLeadStatus(id: string, status: LeadStatus) {
 export async function convertLeadToClient(leadId: string) {
   const supabase = createAdminClient();
 
-  // 리드 정보 가져오기
   const { data: lead, error: fetchError } = await supabase
-    .from("leads")
-    .select("*")
-    .eq("id", leadId)
-    .single();
+    .from("leads").select("*").eq("id", leadId).single();
   if (fetchError) throw new Error(fetchError.message);
 
-  // 고객 생성
   const { data: client, error: clientError } = await supabase
     .from("clients")
     .insert({
@@ -82,21 +77,89 @@ export async function convertLeadToClient(leadId: string) {
       source: lead.source,
       notes: lead.notes,
     })
-    .select()
-    .single();
+    .select().single();
   if (clientError) throw new Error(clientError.message);
 
-  // 리드를 '계약' 상태로 업데이트 + converted_client_id 설정
-  await supabase
-    .from("leads")
-    .update({
-      status: "계약",
-      converted_client_id: client.id,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", leadId);
+  await supabase.from("leads").update({
+    status: "계약",
+    converted_client_id: client.id,
+    updated_at: new Date().toISOString(),
+  }).eq("id", leadId);
 
   revalidateTag("leads");
   revalidateTag("clients");
+  return client;
+}
+
+// 파이프라인 전환: 고객 정보 수정 가능 + 프로젝트 선택 생성
+export type ConvertClientData = {
+  company_name: string;
+  contact_name: string;
+  email: string;
+  phone?: string;
+};
+
+export type ConvertProjectData = {
+  title: string;
+  service_type?: string;
+  contract_amount?: number;
+  deadline?: string;
+};
+
+export async function convertLeadToClientWithProject(
+  leadId: string,
+  clientData: ConvertClientData,
+  projectData?: ConvertProjectData
+) {
+  const supabase = createAdminClient();
+
+  // 리드 소스/메모 가져오기
+  const { data: lead, error: fetchError } = await supabase
+    .from("leads").select("source, notes").eq("id", leadId).single();
+  if (fetchError) throw new Error(fetchError.message);
+
+  // 고객 생성
+  const { data: client, error: clientError } = await supabase
+    .from("clients")
+    .insert({
+      company_name: clientData.company_name,
+      contact_name: clientData.contact_name,
+      email: clientData.email,
+      phone: clientData.phone ?? null,
+      status: "active",
+      source: lead.source,
+      notes: lead.notes,
+    })
+    .select().single();
+  if (clientError) throw new Error(clientError.message);
+
+  // 프로젝트 생성 (선택)
+  if (projectData?.title?.trim()) {
+    const { error: projError } = await supabase.from("projects").insert({
+      title: projectData.title.trim(),
+      client_id: client.id,
+      status: "active",
+      progress: 0,
+      pipeline_stage: "상담",
+      service_type: projectData.service_type ?? null,
+      contract_amount: projectData.contract_amount ?? null,
+      deposit_ratio: 50,
+      deposit_paid: false,
+      final_paid: false,
+      deadline: projectData.deadline ?? null,
+    });
+    if (projError) throw new Error(projError.message);
+  }
+
+  // 리드 전환 처리
+  await supabase.from("leads").update({
+    status: "계약",
+    converted_client_id: client.id,
+    updated_at: new Date().toISOString(),
+  }).eq("id", leadId);
+
+  revalidateTag("leads");
+  revalidateTag("clients");
+  revalidateTag("projects");
   return client;
 }
