@@ -2,65 +2,48 @@
 
 ## 현재 상태
 
-- **빌드:** TypeScript 오류 없음, `npm run dev` 정상 (localhost:3000)
-- **아키텍처:** Server Components First — 목록 페이지 전부 async 서버 컴포넌트 + URL 필터
-- **DB:** leads, interactions 테이블 ✅ 적용 완료 (2026-05-28)
+- **빌드:** TypeScript 오류 없음, 푸시 완료 (ee09123)
+- **아키텍처:** Server Components First — 목록 페이지 전부 async 서버 컴포넌트
+- **DB:** leads, interactions 테이블 ✅ 적용 완료
 
-## 최근 완료 작업 (2026-05-28)
+## 최근 완료 작업 (2026-05-29)
 
-### CRM 전면 재설계 ✅ (커밋 fb645d1)
-**신규 모듈:**
-- `/leads` — 리드 관리 (소스/상태 필터, 칸반 뷰, 팔로업 알림)
-- `/interactions` — 소통기록 (통화/카톡/메일/미팅/메모)
-- `/documents` — 서류함 탭 통합 (견적/계약/계산서)
+### 견적서·계약서 전면 재설계 ✅ (커밋 ee09123)
 
-**아키텍처 전환:**
-- 모든 목록 페이지 → Server Component + URL searchParams 필터
-- Server Actions: `lead-actions.ts`, `interaction-actions.ts`
-- 홈 대시보드: 팔로업 배너 + 파이프라인 KPI + 오늘 할일
+**변경 내용:**
+- 견적서: AI 폼 빌더 → 파일 업로드(PDF/이미지) + URL 입력 방식으로 교체
+- 계약서: 동일한 업로드+저장 방식으로 재설계
+- 이메일 발송 기능 임시 비활성화 (도메인 미인증으로 인해 추후 구현)
 
-**네비게이션:** 홈/리드/고객/소통기록/프로젝트/서류함
+**신규 파일:**
+- `src/app/(dashboard)/estimates/new/page.tsx` — 새 견적서 페이지
+- `src/app/(dashboard)/contracts/new/page.tsx` — 새 계약서 페이지
+- `src/components/estimates/EstimateNewPage.tsx` — 견적서 작성 폼
+- `src/components/estimates/EstimatesListClient.tsx` — 견적서 목록 (서버 → 클라이언트)
+- `src/components/contracts/ContractNewPage.tsx` — 계약서 작성 폼
+- `src/components/contracts/ContractsListClient.tsx` — 계약서 목록
+- `src/app/api/estimates/route.ts`, `[id]/route.ts`, `upload/route.ts`
+- `src/app/api/contracts/route.ts`, `[id]/route.ts`, `upload/route.ts`
 
-## 최근 완료 작업 (2026-05-03)
-
-### 전자계약서 e-서명 기능 구현 ✅
-스펙: `docs/superpowers/specs/2026-05-03-esign-design.md`
-
-**구현된 파일:**
-- `src/app/sign/contract/[token]/page.tsx` — 공개 서명 페이지 (2단계 위자드)
-- `src/app/api/contracts/send-signature/route.ts` — 토큰 생성 + 이메일 발송
-- `src/app/api/contracts/sign/[token]/route.ts` — GET(토큰 검증) + POST(원자적 서명 처리)
-- `src/components/pdf/SignedContractPdf.tsx` — 서명 이미지 포함 PDF
-- `src/lib/resend.ts` — Resend 이메일 유틸리티
-- `supabase/migrations/009_esign_columns.sql` — contracts 테이블 e-서명 컬럼 추가
-- `src/components/contracts/ContractFormDialog.tsx` — "서명 요청 발송" 버튼 추가
-
-## 현재 진행 중: 이메일 발송 디버깅
-
-### 증상
-- UI에 "서명 요청 발송됨" 표시 (API 200 반환)
-- Resend 대시보드에 발송 로그 없음 → 실제 발송 안 됨
-
-### 원인 파악 및 조치
-1. **Resend SDK v2 result 패턴 미처리** → 수정 완료 (34f579c)
-   - `resend.emails.send()` 반환값 `{ data, error }` 에러 체크 추가
-   - 이제 실패 시 UI에 실제 에러 메시지 표시됨
-2. **배포 완료 후 재테스트 필요**
-
-### 다음 세션 시작 시 할 일
-1. 배포 완료 확인 (GitHub Actions 확인)
-2. "서명 요청 발송" 다시 클릭
-3. 에러 메시지 확인:
-   - **에러 메시지 표시됨** → 메시지 내용에 따라 디버그
-   - **또 조용히 성공** → Cloudflare 환경변수 `RESEND_API_KEY` 값 재확인
-4. **Resend 무료 플랜 제한 가능성**: 도메인 미인증 시 가입 이메일로만 발송 가능
-   - resend.com → Domains에서 도메인 추가 필요할 수 있음
+**수정된 파일:**
+- `src/lib/types.ts` — EstimateStatus에서 `accepted` 제거, ContractStatus에서 `signature_requested` 제거
+- `src/app/(dashboard)/estimates/page.tsx` — Server Component로 전환
+- `src/app/(dashboard)/contracts/page.tsx` — Server Component로 전환
+- `src/app/(dashboard)/clients/[id]/page.tsx` — EstimateFormDialog/ContractFormDialog → Link 교체
+- `src/components/documents/DocumentsTabs.tsx` — 상태 타입 업데이트
 
 ## 알려진 이슈
 
+- **Supabase Storage 버킷:** `estimates`, `contracts` 버킷이 Supabase 대시보드에 없으면 파일 업로드 실패. 직접 생성 필요 (Public 버킷).
+- **이메일 발송:** `magnatekorea.com` 도메인이 Resend에 미인증 상태. 아임웹 DNS가 언더스코어 레코드(`resend._domainkey`) 지원 안 함. Cloudflare DNS 이전 또는 추후 별도 구현 필요.
 - **Bolta API** (`/api/bolta/issue`): 실제 API 키 테스트 필요
 - **로컬 빌드:** Windows webpack EISDIR (pre-existing)
-- **Supabase 마이그레이션 009**: 적용 완료 여부 확인 필요
+
+## 다음 TODO
+
+1. Supabase Storage에서 `estimates`, `contracts` 버킷 생성 (Public)
+2. 이메일 발송 기능 재개 시 Cloudflare DNS 이전 or Resend 대안 검토
+3. 이메일 발송 버튼 재활성화 (EstimatesListClient.tsx에 추가)
 
 ## 환경변수 (Cloudflare Workers 대시보드에 설정됨)
 ```
