@@ -151,10 +151,12 @@ export async function convertLeadToClientWithProject(
     if (projError) throw new Error(projError.message);
   }
 
-  // 리드 전환 처리
+  // 리드 전환 처리 — 고객 전환 폼에서 수정된 이름/회사도 리드에 반영
   await supabase.from("leads").update({
     status: "계약",
     converted_client_id: client.id,
+    name: clientData.contact_name,
+    company: clientData.company_name,
     updated_at: new Date().toISOString(),
   }).eq("id", leadId);
 
