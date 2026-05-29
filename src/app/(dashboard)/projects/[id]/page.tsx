@@ -14,6 +14,8 @@ import {
   Plus,
   X,
   ListChecks,
+  LinkSimple,
+  ArrowSquareOut,
 } from "@phosphor-icons/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +35,14 @@ import {
   TASK_TEMPLATES,
   type ProjectTask,
 } from "@/lib/actions/project-tasks";
+import {
+  fetchProjectDeliverablesAction,
+  addProjectDeliverableAction,
+  deleteProjectDeliverableAction,
+  detectUrlType,
+  URL_TYPE_CONFIG,
+  type ProjectDeliverable,
+} from "@/lib/actions/project-deliverables";
 import type { Project, ClientWithRevenue, Interaction } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -252,6 +262,164 @@ function ProjectChecklist({
           type="submit"
           disabled={!newTitle.trim()}
           className="inline-flex items-center gap-1 h-9 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
+        >
+          <Plus size={14} />
+          추가
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// ─── 납품물 컴포넌트 ──────────────────────────────────────────────────
+function ProjectDeliverables({ projectId }: { projectId: string }) {
+  const [items, setItems] = useState<ProjectDeliverable[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState("");
+  const [url, setUrl] = useState("");
+  const [urlError, setUrlError] = useState("");
+
+  useEffect(() => {
+    fetchProjectDeliverablesAction(projectId)
+      .then(setItems)
+      .finally(() => setLoading(false));
+  }, [projectId]);
+
+  function validateUrl(val: string): boolean {
+    try {
+      new URL(val);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const t = title.trim();
+    const u = url.trim();
+    if (!t || !u) return;
+    if (!validateUrl(u)) {
+      setUrlError("올바른 URL을 입력해 주세요. (https://...)");
+      return;
+    }
+    setUrlError("");
+    const tempId = `temp-${Date.now()}`;
+    setItems((prev) => [
+      { id: tempId, project_id: projectId, title: t, url: u, created_at: "" },
+      ...prev,
+    ]);
+    setTitle("");
+    setUrl("");
+    try {
+      const created = await addProjectDeliverableAction(projectId, t, u);
+      setItems((prev) => prev.map((i) => (i.id === tempId ? created : i)));
+    } catch {
+      setItems((prev) => prev.filter((i) => i.id !== tempId));
+      alert("추가에 실패했습니다.");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    try {
+      await deleteProjectDeliverableAction(id);
+    } catch {
+      fetchProjectDeliverablesAction(projectId).then(setItems);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {[1, 2].map((i) => (
+          <div key={i} className="h-14 rounded-lg bg-slate-100 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* 링크 목록 */}
+      {items.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center">
+          <LinkSimple size={24} className="text-slate-300 mx-auto mb-2" />
+          <p className="text-sm text-slate-400">등록된 납품물이 없습니다.</p>
+          <p className="text-xs text-slate-300 mt-1">
+            Google Drive, Figma, Notion 등 링크를 저장하세요.
+          </p>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {items.map((item) => {
+            const type = detectUrlType(item.url);
+            const cfg = URL_TYPE_CONFIG[type];
+            return (
+              <li
+                key={item.id}
+                className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300 transition-colors"
+              >
+                <span
+                  className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg border text-base ${cfg.bg} ${cfg.border}`}
+                >
+                  {cfg.emoji}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">{item.url}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-md text-blue-500 hover:bg-blue-50 transition-colors"
+                    title="새 탭에서 열기"
+                  >
+                    <ArrowSquareOut size={15} />
+                  </a>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {/* 추가 폼 */}
+      <form onSubmit={handleAdd} className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">링크 추가</p>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="이름 (예: 최종 디자인 파일)"
+          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+        />
+        <div className="space-y-1">
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => { setUrl(e.target.value); setUrlError(""); }}
+            placeholder="URL (https://...)"
+            className={`w-full h-9 px-3 rounded-lg border bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition ${
+              urlError ? "border-red-300" : "border-slate-200"
+            }`}
+          />
+          {urlError && <p className="text-xs text-red-500">{urlError}</p>}
+        </div>
+        <button
+          type="submit"
+          disabled={!title.trim() || !url.trim()}
+          className="w-full h-9 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
         >
           <Plus size={14} />
           추가
@@ -566,6 +734,7 @@ export default function ProjectDetailPage() {
           <Tabs defaultValue="checklist">
             <TabsList className="w-full justify-start mb-5 flex-wrap">
               <TabsTrigger value="checklist">체크리스트</TabsTrigger>
+              <TabsTrigger value="deliverables">납품물</TabsTrigger>
               {client && (
                 <TabsTrigger value="interactions">
                   소통기록
@@ -588,6 +757,14 @@ export default function ProjectDetailPage() {
                 projectId={project.id}
                 serviceType={project.service_type}
               />
+            </TabsContent>
+
+            {/* 납품물 탭 */}
+            <TabsContent value="deliverables">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-slate-800 text-sm">납품물 링크</h2>
+              </div>
+              <ProjectDeliverables projectId={project.id} />
             </TabsContent>
 
             {/* 소통기록 탭 */}
