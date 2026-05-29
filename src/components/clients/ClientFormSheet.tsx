@@ -18,8 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient, updateClient, type CreateClientInput } from "@/lib/actions/clients";
-import { revalidateClients } from "@/lib/actions/revalidate";
+import { createClientAction, updateClientAction, type ClientInput as CreateClientInput } from "@/lib/actions/client-actions";
 import type { Client, ClientStatus } from "@/lib/types";
 
 interface ClientFormSheetProps {
@@ -144,14 +143,13 @@ export function ClientFormSheet({
       };
 
       if (isEdit && client) {
-        await updateClient(client.id, payload);
+        await updateClientAction(client.id, payload);
       } else {
-        await createClient(payload);
+        await createClientAction(payload);
       }
 
       onSuccess();
       onOpenChange(false);
-      revalidateClients().catch(() => {});
     } catch (err) {
       setErrors({ general: err instanceof Error ? err.message : "저장 중 오류가 발생했습니다. 다시 시도해 주세요." });
     } finally {
