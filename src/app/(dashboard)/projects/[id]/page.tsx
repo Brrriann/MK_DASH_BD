@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -12,6 +12,8 @@ import {
   CheckCircle,
   Circle,
   Plus,
+  X,
+  ListChecks,
 } from "@phosphor-icons/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +24,15 @@ import {
   fetchClientAction,
   fetchClientInteractionsAction,
 } from "@/lib/actions/client-actions";
+import {
+  fetchProjectTasksAction,
+  addProjectTaskAction,
+  toggleProjectTaskAction,
+  deleteProjectTaskAction,
+  createTasksFromTemplateAction,
+  TASK_TEMPLATES,
+  type ProjectTask,
+} from "@/lib/actions/project-tasks";
 import type { Project, ClientWithRevenue, Interaction } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -50,6 +61,207 @@ const INTERACTION_CONFIG: Record<string, { label: string; emoji: string; bg: str
   meeting: { label: "미팅",   emoji: "👥", bg: "bg-green-50",  text: "text-green-700" },
   memo:    { label: "메모",   emoji: "📝", bg: "bg-slate-100", text: "text-slate-600" },
 };
+
+// ─── 체크리스트 컴포넌트 ───────────────────────────────────────────
+function ProjectChecklist({
+  projectId,
+  serviceType,
+}: {
+  projectId: string;
+  serviceType: string | null;
+}) {
+  const [tasks, setTasks] = useState<ProjectTask[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [newTitle, setNewTitle] = useState("");
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchProjectTasksAction(projectId)
+      .then(setTasks)
+      .finally(() => setLoadingTasks(false));
+  }, [projectId]);
+
+  async function handleToggle(taskId: string, current: boolean) {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, completed: !current } : t))
+    );
+    try {
+      await toggleProjectTaskAction(taskId, !current);
+    } catch {
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, completed: current } : t))
+      );
+    }
+  }
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const title = newTitle.trim();
+    if (!title) return;
+    const tempId = `temp-${Date.now()}`;
+    const sortOrder = tasks.length;
+    setNewTitle("");
+    setTasks((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        project_id: projectId,
+        title,
+        completed: false,
+        sort_order: sortOrder,
+        created_at: "",
+        updated_at: "",
+      },
+    ]);
+    try {
+      const created = await addProjectTaskAction(projectId, title, sortOrder);
+      setTasks((prev) => prev.map((t) => (t.id === tempId ? created : t)));
+    } catch {
+      setTasks((prev) => prev.filter((t) => t.id !== tempId));
+      alert("항목 추가에 실패했습니다.");
+    }
+  }
+
+  async function handleDelete(taskId: string) {
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    try {
+      await deleteProjectTaskAction(taskId);
+    } catch {
+      fetchProjectTasksAction(projectId).then(setTasks);
+    }
+  }
+
+  async function handleApplyTemplate() {
+    if (!serviceType || !TASK_TEMPLATES[serviceType]) return;
+    if (
+      tasks.length > 0 &&
+      !window.confirm("기존 체크리스트가 모두 삭제되고 템플릿으로 교체됩니다. 계속하시겠습니까?")
+    )
+      return;
+    setApplyingTemplate(true);
+    try {
+      const created = await createTasksFromTemplateAction(projectId, serviceType);
+      setTasks(created);
+    } catch {
+      alert("템플릿 적용에 실패했습니다.");
+    } finally {
+      setApplyingTemplate(false);
+    }
+  }
+
+  const completedCount = tasks.filter((t) => t.completed).length;
+  const totalCount = tasks.length;
+  const taskProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : null;
+
+  if (loadingTasks) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-10 rounded-lg bg-slate-100 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* 진행 요약 */}
+      {totalCount > 0 && (
+        <div className="flex items-center gap-3 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-200">
+          <span className="text-xs text-slate-500">
+            <span className="font-semibold text-slate-900">{completedCount}</span>
+            /{totalCount} 완료
+          </span>
+          <div className="flex-1 h-1.5 bg-slate-200 rounded-full">
+            <div
+              className="h-full bg-blue-600 rounded-full transition-all"
+              style={{ width: `${taskProgress}%` }}
+            />
+          </div>
+          <span className="text-xs font-semibold text-slate-700">{taskProgress}%</span>
+        </div>
+      )}
+
+      {/* 템플릿 버튼 */}
+      {serviceType && TASK_TEMPLATES[serviceType] && (
+        <button
+          onClick={handleApplyTemplate}
+          disabled={applyingTemplate}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+        >
+          <ListChecks size={13} />
+          {applyingTemplate
+            ? "적용 중..."
+            : `${serviceType} 템플릿 적용 (${TASK_TEMPLATES[serviceType].length}개)`}
+        </button>
+      )}
+
+      {/* 태스크 목록 */}
+      {tasks.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center">
+          <p className="text-sm text-slate-400">체크리스트 항목이 없습니다.</p>
+          <p className="text-xs text-slate-300 mt-1">아래에서 직접 추가하거나 템플릿을 적용하세요.</p>
+        </div>
+      ) : (
+        <ul className="space-y-1.5">
+          {tasks.map((task) => (
+            <li
+              key={task.id}
+              className="group flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5 hover:border-slate-300 transition-colors"
+            >
+              <button
+                onClick={() => handleToggle(task.id, task.completed)}
+                className="shrink-0 transition-colors"
+              >
+                {task.completed ? (
+                  <CheckCircle size={18} weight="fill" className="text-emerald-500" />
+                ) : (
+                  <Circle size={18} className="text-slate-300 hover:text-slate-400" />
+                )}
+              </button>
+              <span
+                className={`flex-1 text-sm ${
+                  task.completed ? "line-through text-slate-400" : "text-slate-800"
+                }`}
+              >
+                {task.title}
+              </span>
+              <button
+                onClick={() => handleDelete(task.id)}
+                className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-all"
+              >
+                <X size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* 항목 추가 */}
+      <form onSubmit={handleAdd} className="flex gap-2">
+        <input
+          ref={inputRef}
+          type="text"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          placeholder="새 항목 추가..."
+          className="flex-1 h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+        />
+        <button
+          type="submit"
+          disabled={!newTitle.trim()}
+          className="inline-flex items-center gap-1 h-9 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
+        >
+          <Plus size={14} />
+          추가
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
 
 function getDaysLeft(deadline: string): number {
   const today = new Date();
@@ -351,8 +563,9 @@ export default function ProjectDetailPage() {
 
         {/* ─── RIGHT PANEL ─── */}
         <div className="min-w-0">
-          <Tabs defaultValue={client ? "interactions" : "info"}>
-            <TabsList className="w-full justify-start mb-5">
+          <Tabs defaultValue="checklist">
+            <TabsList className="w-full justify-start mb-5 flex-wrap">
+              <TabsTrigger value="checklist">체크리스트</TabsTrigger>
               {client && (
                 <TabsTrigger value="interactions">
                   소통기록
@@ -365,6 +578,17 @@ export default function ProjectDetailPage() {
               )}
               <TabsTrigger value="info">상세정보</TabsTrigger>
             </TabsList>
+
+            {/* 체크리스트 탭 */}
+            <TabsContent value="checklist">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-slate-800 text-sm">체크리스트</h2>
+              </div>
+              <ProjectChecklist
+                projectId={project.id}
+                serviceType={project.service_type}
+              />
+            </TabsContent>
 
             {/* 소통기록 탭 */}
             {client && (

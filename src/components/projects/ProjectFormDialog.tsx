@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { createProject, updateProject, type CreateProjectInput } from "@/lib/actions/projects";
 import { revalidateProjects } from "@/lib/actions/revalidate";
+import { createTasksFromTemplateAction, TASK_TEMPLATES } from "@/lib/actions/project-tasks";
 import type { Project, ClientWithRevenue, ProjectStatus, PipelineStage, ServiceType, SourceChannel } from "@/lib/types";
 
 const PIPELINE_STAGES: PipelineStage[] = ['상담', '견적', '계약', '계산서발행', '계약입금', '착수', '납품', '완납'];
@@ -53,6 +54,7 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
   const [sourceChannel, setSourceChannel] = useState<SourceChannel | "">("") ;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [autoCreateTasks, setAutoCreateTasks] = useState(true);
 
   useEffect(() => {
     if (open) {
@@ -100,7 +102,11 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
       if (isEdit && project) {
         await updateProject(project.id, data);
       } else {
-        await createProject(data);
+        const created = await createProject(data);
+        // 신규 생성 + 서비스 유형 있음 + 자동 생성 체크 → 템플릿 적용
+        if (autoCreateTasks && data.service_type && TASK_TEMPLATES[data.service_type]) {
+          await createTasksFromTemplateAction(created.id, data.service_type);
+        }
       }
       onSaved();
       onClose();
@@ -243,6 +249,27 @@ export function ProjectFormDialog({ open, onClose, project, clients, onSaved }: 
               )}
             </div>
           </div>
+
+          {/* 체크리스트 자동 생성 (신규 + 서비스 유형 있을 때) */}
+          {!isEdit && !!serviceType && TASK_TEMPLATES[serviceType] && (
+            <label className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={autoCreateTasks}
+                onChange={(e) => setAutoCreateTasks(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div>
+                <p className="text-sm font-medium text-blue-800">
+                  체크리스트 자동 생성
+                </p>
+                <p className="text-xs text-blue-600 mt-0.5">
+                  {serviceType} 기본 {TASK_TEMPLATES[serviceType].length}개 항목
+                  ({TASK_TEMPLATES[serviceType].slice(0, 3).join(" → ")} ···)
+                </p>
+              </div>
+            </label>
+          )}
 
           {error && (
             <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
