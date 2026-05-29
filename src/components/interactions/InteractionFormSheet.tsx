@@ -242,13 +242,13 @@ export function InteractionFormSheet({ clients, leads }: InteractionFormSheetPro
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
                 소통 유형 <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-2 flex-wrap">
+              <div className="grid grid-cols-3 gap-2">
                 {TYPE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => setType(opt.value)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                       type === opt.value
                         ? "bg-blue-600 text-white border-blue-600"
                         : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
