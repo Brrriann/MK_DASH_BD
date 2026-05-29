@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -389,6 +389,11 @@ export function ProjectsClient({ initialProjects, clients }: ProjectsClientProps
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // router.refresh() 후 서버에서 새 initialProjects가 오면 즉시 반영
+  useEffect(() => {
+    setProjects(initialProjects);
+  }, [initialProjects]);
 
   function handleEdit(project: Project) {
     setEditingProject(project);
