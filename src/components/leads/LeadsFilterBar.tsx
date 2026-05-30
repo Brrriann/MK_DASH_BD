@@ -18,7 +18,6 @@ const SOURCES = [
 const STATUSES = [
   { value: "all", label: "전체" },
   { value: "신규", label: "신규" },
-  { value: "연락중", label: "연락중" },
   { value: "견적발송", label: "견적발송" },
   { value: "계약", label: "계약" },
   { value: "실패", label: "실패" },

@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { UserPlus, Chat, FileText, CalendarCheck } from "@phosphor-icons/react/ssr";
+import { UserPlus, FileText, Handshake, CalendarCheck } from "@phosphor-icons/react/ssr";
 
 interface PipelineKpiProps {
   pipeline: {
     신규: number;
-    연락중: number;
     견적발송: number;
+    계약: number;
   };
   todayCount: number;
 }
@@ -21,20 +21,20 @@ export function PipelineKpi({ pipeline, todayCount }: PipelineKpiProps) {
       bg: "bg-blue-50",
     },
     {
-      label: "연락중",
-      value: pipeline.연락중,
-      icon: Chat,
-      href: "/leads?status=%EC%97%B0%EB%9D%BD%EC%A4%91",
-      accent: "text-amber-600",
-      bg: "bg-amber-50",
-    },
-    {
       label: "견적발송",
       value: pipeline.견적발송,
       icon: FileText,
       href: "/leads?status=%EA%B2%AC%EC%A0%81%EB%B0%9C%EC%86%A1",
-      accent: "text-violet-600",
-      bg: "bg-violet-50",
+      accent: "text-amber-600",
+      bg: "bg-amber-50",
+    },
+    {
+      label: "계약",
+      value: pipeline.계약,
+      icon: Handshake,
+      href: "/leads?status=%EA%B3%84%EC%95%BD",
+      accent: "text-green-600",
+      bg: "bg-green-50",
     },
     {
       label: "오늘 팔로업",

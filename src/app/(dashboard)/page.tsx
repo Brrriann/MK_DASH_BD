@@ -159,8 +159,8 @@ export default async function HomePage() {
 
   const pipeline = {
     신규: data.pipelineLeads.filter((l) => l.status === "신규").length,
-    연락중: data.pipelineLeads.filter((l) => l.status === "연락중").length,
     견적발송: data.pipelineLeads.filter((l) => l.status === "견적발송").length,
+    계약: data.pipelineLeads.filter((l) => l.status === "계약").length,
   };
 
   return (

@@ -31,13 +31,6 @@ const STATUS_COLUMNS: {
   {
     status: "신규",
     label: "신규",
-    color: "text-slate-700",
-    bg: "bg-slate-100",
-    dot: "bg-slate-400",
-  },
-  {
-    status: "연락중",
-    label: "연락중",
     color: "text-blue-700",
     bg: "bg-blue-50",
     dot: "bg-blue-500",
@@ -84,7 +77,6 @@ const SOURCE_COLORS: Record<string, string> = {
 
 const ALL_STATUSES: LeadStatus[] = [
   "신규",
-  "연락중",
   "견적발송",
   "계약",
   "보류",

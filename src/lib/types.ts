@@ -8,7 +8,7 @@ export type ProjectStatus = "active" | "completed" | "on_hold";
 export type PipelineStage = '상담' | '견적' | '계약' | '계산서발행' | '계약입금' | '착수' | '납품' | '완납';
 export type ServiceType = '웹개발' | '앱개발' | '소프트웨어개발' | '디자인' | '영상' | '강의/컨설팅' | '기타';
 export type SourceChannel = '숨고' | '크몽' | '위시캣' | '라우드소싱' | 'Fiverr' | '직접문의' | '재구매' | '기타';
-export type LeadStatus = '신규' | '연락중' | '견적발송' | '계약' | '실패' | '보류';
+export type LeadStatus = '신규' | '견적발송' | '계약' | '실패' | '보류';
 export type LeadSource = '숨고' | '크몽' | '위시캣' | '라우드소싱' | 'Fiverr' | '직접문의' | '기타';
 export type InteractionType = 'call' | 'kakao' | 'email' | 'meeting' | 'memo';
 
