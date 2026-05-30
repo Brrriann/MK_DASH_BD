@@ -9,6 +9,17 @@
 
 ## 최근 완료 작업 (2026-05-29)
 
+### 미팅 일정 + 캘린더 연동 ✅
+- DB: `015_meeting_time.sql` — `meeting_notes.met_time TIME` nullable 추가 (**Supabase에서 실행 필요**)
+- 미팅에 시간 입력/표시 (작성·편집·카드·상세 전부)
+- 고객 상세에 **미팅 탭** 신설 + 경량 **빠른 등록 다이얼로그**(`QuickMeetingDialog`: 제목·날짜·시간·방식)
+- 네비게이션에 **캘린더**(`/schedule`) 추가 (Sidebar + MoreDrawer)
+- 캘린더 개선: 미팅 시간 표시·정렬, 일정 클릭 시 상세 이동, **프로젝트 deadline 버그 수정**(기존엔 전부 오늘로 찍힘 → 마감일에 표시)
+- 유틸: `formatTimeLabel()` (utils.ts)
+
+### 리드 편집 기능 ✅
+`LeadEditSheet` 추가, 칸반 카드 편집 버튼 연결
+
 ### 파비콘 ✅
 `src/app/icon.svg` — 사이드바와 동일한 `#0f172a` 배경에 흰색 MK 텍스트 (font-size 18, font-weight 900)
 

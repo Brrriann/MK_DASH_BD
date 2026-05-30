@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  SquaresFour, FunnelSimple, Buildings, ChatCircleDots, Kanban, FolderOpen, GearSix
+  SquaresFour, FunnelSimple, Buildings, ChatCircleDots, Kanban, FolderOpen, CalendarBlank, GearSix
 } from "@phosphor-icons/react";
 import { NavItem } from "./NavItem";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/clients", label: "고객", icon: Buildings },
   { href: "/interactions", label: "소통기록", icon: ChatCircleDots },
   { href: "/projects", label: "프로젝트", icon: Kanban },
+  { href: "/schedule", label: "캘린더", icon: CalendarBlank },
   { href: "/documents", label: "서류함", icon: FolderOpen },
 ] as const;
 

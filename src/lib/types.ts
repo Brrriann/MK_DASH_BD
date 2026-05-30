@@ -106,6 +106,7 @@ export interface MeetingNote {
   client_id: string | null;
   title: string;
   met_at: string;
+  met_time: string | null;
   attendees: string[];
   method: MeetingMethod | null;
   content: string | null;

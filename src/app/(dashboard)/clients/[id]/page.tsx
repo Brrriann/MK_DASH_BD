@@ -34,8 +34,10 @@ import {
   type Contract,
 } from "@/lib/actions/clients";
 import { fetchClientInteractionsAction } from "@/lib/actions/client-actions";
+import { fetchMeetingNotes, type MeetingNoteWithClient } from "@/lib/actions/meetings";
+import { QuickMeetingDialog } from "@/components/meetings/QuickMeetingDialog";
 import type { ClientWithRevenue, Project, Interaction, TaxInvoice } from "@/lib/types";
-import { formatKRW, formatDate } from "@/lib/utils";
+import { formatKRW, formatDate, formatTimeLabel } from "@/lib/utils";
 
 const projectStatusLabel: Record<string, string> = {
   active: "진행중",
@@ -90,6 +92,7 @@ export default function ClientDetailPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [taxInvoices, setTaxInvoices] = useState<TaxInvoice[]>([]);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
+  const [meetings, setMeetings] = useState<MeetingNoteWithClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -99,13 +102,14 @@ export default function ClientDetailPage() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [c, p, e, ct, ti, interactions] = await Promise.all([
+      const [c, p, e, ct, ti, interactions, m] = await Promise.all([
         fetchClient(id),
         fetchClientProjects(id),
         fetchClientEstimates(id),
         fetchClientContracts(id),
         fetchClientTaxInvoices(id),
         fetchClientInteractionsAction(id),
+        fetchMeetingNotes(id),
       ]);
 
       if (!c) {
@@ -119,6 +123,7 @@ export default function ClientDetailPage() {
       setContracts(ct);
       setTaxInvoices(ti);
       setInteractions(interactions);
+      setMeetings(m);
     } catch {
       router.replace("/clients");
     } finally {
@@ -338,6 +343,14 @@ export default function ClientDetailPage() {
                   </span>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="meetings">
+                미팅
+                {meetings.length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">
+                    {meetings.length}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="estimates">
                 견적·계약
                 {(estimates.length + contracts.length) > 0 && (
@@ -478,6 +491,47 @@ export default function ClientDetailPage() {
                       </div>
                     </Link>
                   ))
+                )}
+              </div>
+            </TabsContent>
+
+            {/* 미팅 Tab */}
+            <TabsContent value="meetings">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-outfit font-semibold text-slate-800 text-sm">미팅 일정</h2>
+                <QuickMeetingDialog clientId={id} variant="compact" onCreated={loadAll} />
+              </div>
+              <div className="space-y-2">
+                {meetings.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center">
+                    <p className="text-sm text-slate-400">등록된 미팅 일정이 없습니다.</p>
+                  </div>
+                ) : (
+                  meetings.map((m) => {
+                    const dateLabel = formatDate(m.met_at);
+                    const timeLabel = formatTimeLabel(m.met_time);
+                    return (
+                      <Link
+                        key={m.id}
+                        href={`/meetings/${m.id}`}
+                        className="block rounded-xl border border-slate-200 bg-white shadow-sm p-4 hover:border-blue-200 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-center justify-between gap-3 mb-1">
+                          <h3 className="font-outfit font-medium text-slate-900 text-sm truncate">{m.title}</h3>
+                          {m.method && (
+                            <span className="text-[10px] bg-slate-100 text-slate-600 rounded-full px-2 py-0.5 shrink-0">
+                              {{ in_person: "대면", video: "화상", phone: "전화", email: "이메일" }[m.method]}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400">
+                          <CalendarBlank size={12} weight="regular" className="inline mr-1 -mt-0.5" />
+                          {dateLabel}
+                          {timeLabel && <span className="ml-1.5 text-blue-500 font-medium">{timeLabel}</span>}
+                        </p>
+                      </Link>
+                    );
+                  })
                 )}
               </div>
             </TabsContent>

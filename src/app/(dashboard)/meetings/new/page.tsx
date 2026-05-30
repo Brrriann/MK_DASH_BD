@@ -37,6 +37,7 @@ export default function NewMeetingPage() {
   const [title, setTitle] = useState("");
   const [clientId, setClientId] = useState<string>(initialClientId);
   const [metAt, setMetAt] = useState(new Date().toISOString().split("T")[0]);
+  const [metTime, setMetTime] = useState("");
   const [method, setMethod] = useState<MeetingMethod | null>(null);
   const [attendees, setAttendees] = useState<string[]>([]);
   const [content, setContent] = useState("");
@@ -82,6 +83,7 @@ export default function NewMeetingPage() {
         title: title || "제목 없음",
         client_id: clientId || "",
         met_at: metAt,
+        met_time: metTime || null,
         attendees,
         method,
         content,
@@ -95,7 +97,7 @@ export default function NewMeetingPage() {
     } finally {
       setSaving(false);
     }
-  }, [title, clientId, metAt, attendees, method, content, savedId, saving]);
+  }, [title, clientId, metAt, metTime, attendees, method, content, savedId, saving]);
 
   // Autosave interval
   useEffect(() => {
@@ -135,6 +137,7 @@ export default function NewMeetingPage() {
         title,
         client_id: clientId || "",
         met_at: metAt,
+        met_time: metTime || null,
         attendees,
         method,
         content,
@@ -218,18 +221,32 @@ export default function NewMeetingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6">
         {/* Left column: metadata */}
         <div className="space-y-5">
-          {/* Date */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-slate-600">미팅 날짜</Label>
-            <Input
-              type="date"
-              value={metAt}
-              onChange={(e) => {
-                setMetAt(e.target.value);
-                markDirty();
-              }}
-              className="font-outfit text-sm"
-            />
+          {/* Date + Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-slate-600">미팅 날짜</Label>
+              <Input
+                type="date"
+                value={metAt}
+                onChange={(e) => {
+                  setMetAt(e.target.value);
+                  markDirty();
+                }}
+                className="font-outfit text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-slate-600">시간</Label>
+              <Input
+                type="time"
+                value={metTime}
+                onChange={(e) => {
+                  setMetTime(e.target.value);
+                  markDirty();
+                }}
+                className="font-outfit text-sm"
+              />
+            </div>
           </div>
 
           {/* Title */}

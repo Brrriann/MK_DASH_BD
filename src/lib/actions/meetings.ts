@@ -11,6 +11,7 @@ export interface CreateMeetingNoteInput {
   title: string;
   client_id: string;
   met_at: string;
+  met_time?: string | null;
   attendees: string[];
   method?: MeetingMethod | null;
   content?: string | null;

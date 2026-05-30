@@ -21,6 +21,7 @@ import {
 import { fetchClients, fetchTasks } from "@/lib/actions/tasks";
 import type { MeetingNoteWithClient } from "@/lib/actions/meetings";
 import type { Client, Task, MeetingMethod } from "@/lib/types";
+import { formatTimeLabel } from "@/lib/utils";
 import { AutoSaveBar, type AutoSaveStatus } from "@/components/meetings/AutoSaveBar";
 import { AttendeeTagInput } from "@/components/meetings/AttendeeTagInput";
 import { MethodChipSelect } from "@/components/meetings/MethodChipSelect";
@@ -76,6 +77,7 @@ export default function MeetingDetailPage() {
   const [title, setTitle] = useState("");
   const [clientId, setClientId] = useState("");
   const [metAt, setMetAt] = useState("");
+  const [metTime, setMetTime] = useState("");
   const [method, setMethod] = useState<MeetingMethod | null>(null);
   const [attendees, setAttendees] = useState<string[]>([]);
   const [content, setContent] = useState("");
@@ -100,6 +102,7 @@ export default function MeetingDetailPage() {
           setTitle(data.title);
           setClientId(data.client_id ?? "");
           setMetAt(data.met_at);
+          setMetTime(data.met_time ? data.met_time.slice(0, 5) : "");
           setMethod(data.method);
           setAttendees(data.attendees);
           setContent(data.content ?? "");
@@ -125,6 +128,7 @@ export default function MeetingDetailPage() {
         title,
         client_id: clientId || null,
         met_at: metAt,
+        met_time: metTime || null,
         method,
         attendees,
         content,
@@ -138,7 +142,7 @@ export default function MeetingDetailPage() {
     } finally {
       setSaving(false);
     }
-  }, [id, title, clientId, metAt, method, attendees, content, saving, editMode]);
+  }, [id, title, clientId, metAt, metTime, method, attendees, content, saving, editMode]);
 
   useEffect(() => {
     if (!editMode) return;
@@ -174,6 +178,7 @@ export default function MeetingDetailPage() {
         title,
         client_id: clientId || null,
         met_at: metAt,
+        met_time: metTime || null,
         method,
         attendees,
         content,
@@ -204,6 +209,7 @@ export default function MeetingDetailPage() {
       setTitle(note.title);
       setClientId(note.client_id ?? "");
       setMetAt(note.met_at);
+      setMetTime(note.met_time ? note.met_time.slice(0, 5) : "");
       setMethod(note.method);
       setAttendees(note.attendees);
       setContent(note.content ?? "");
@@ -239,6 +245,7 @@ export default function MeetingDetailPage() {
     month: "long",
     day: "numeric",
   });
+  const timeLabel = formatTimeLabel(note.met_time);
 
   return (
     <div className="font-outfit">
@@ -252,7 +259,10 @@ export default function MeetingDetailPage() {
             <ArrowLeft size={16} weight="regular" />
           </Link>
           <div className="min-w-0">
-            <p className="text-xs text-slate-400 mb-1">{formattedDate}</p>
+            <p className="text-xs text-slate-400 mb-1">
+              {formattedDate}
+              {timeLabel && <span className="ml-1.5 text-blue-500 font-medium">{timeLabel}</span>}
+            </p>
             {!editMode ? (
               <h1 className="font-outfit text-2xl font-bold tracking-tight text-slate-900 truncate">
                 {note.title}
@@ -313,14 +323,25 @@ export default function MeetingDetailPage() {
         /* Edit form */
         <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6">
           <div className="space-y-5">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-slate-600">미팅 날짜</Label>
-              <Input
-                type="date"
-                value={metAt}
-                onChange={(e) => { setMetAt(e.target.value); markDirty(); }}
-                className="font-outfit text-sm"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-slate-600">미팅 날짜</Label>
+                <Input
+                  type="date"
+                  value={metAt}
+                  onChange={(e) => { setMetAt(e.target.value); markDirty(); }}
+                  className="font-outfit text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-slate-600">시간</Label>
+                <Input
+                  type="time"
+                  value={metTime}
+                  onChange={(e) => { setMetTime(e.target.value); markDirty(); }}
+                  className="font-outfit text-sm"
+                />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-slate-600">미팅 제목</Label>

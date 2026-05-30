@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Kanban, FolderOpen, GearSix } from "@phosphor-icons/react";
+import { Kanban, CalendarBlank, FolderOpen, GearSix } from "@phosphor-icons/react";
 
 const MAIN_ITEMS = [
   { href: "/projects", label: "프로젝트", icon: Kanban },
+  { href: "/schedule", label: "캘린더", icon: CalendarBlank },
   { href: "/documents", label: "서류함", icon: FolderOpen },
 ] as const;
 

@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { CalendarBlank, List, Plus, ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { formatTimeLabel } from "@/lib/utils";
 
 type EventType = "meeting" | "project";
 
@@ -11,6 +13,7 @@ interface ScheduleEvent {
   id: string;
   title: string;
   date: string;
+  time: string | null;
   type: EventType;
   clientName?: string;
   clientId?: string;
@@ -20,6 +23,7 @@ interface MeetingRow {
   id: string;
   title: string;
   met_at: string;
+  met_time: string | null;
   client_id: string | null;
   clients: { company_name: string }[] | null;
 }
@@ -27,6 +31,7 @@ interface MeetingRow {
 interface ProjectRow {
   id: string;
   title: string;
+  deadline: string | null;
   client_id: string | null;
   clients: { company_name: string }[] | null;
 }
@@ -39,6 +44,7 @@ function getSupabase() {
 }
 
 export default function SchedulePage() {
+  const router = useRouter();
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [events, setEvents] = useState<ScheduleEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,33 +59,38 @@ export default function SchedulePage() {
       const [{ data: meetings }, { data: projects }] = await Promise.all([
         supabase
           .from("meeting_notes")
-          .select("id, title, met_at, client_id, clients(company_name)")
+          .select("id, title, met_at, met_time, client_id, clients(company_name)")
           .gte("met_at", today)
           .order("met_at", { ascending: true }),
         supabase
           .from("projects")
-          .select("id, title, client_id, clients(company_name)")
-          .eq("status", "active"),
+          .select("id, title, deadline, client_id, clients(company_name)")
+          .eq("status", "active")
+          .not("deadline", "is", null),
       ]);
 
       const meetingEvents: ScheduleEvent[] = (meetings ?? []).map((m: MeetingRow) => ({
         id: m.id,
         title: m.title,
-        date: m.met_at,
+        date: m.met_at.split("T")[0],
+        time: m.met_time,
         type: "meeting" as const,
         clientName: m.clients?.[0]?.company_name,
         clientId: m.client_id ?? undefined,
       }));
 
-      const todayStr = new Date().toISOString().split("T")[0];
-      const projectEvents: ScheduleEvent[] = (projects ?? []).map((p: ProjectRow) => ({
-        id: p.id,
-        title: p.title,
-        date: todayStr,
-        type: "project" as const,
-        clientName: p.clients?.[0]?.company_name,
-        clientId: p.client_id ?? undefined,
-      }));
+      // 프로젝트는 마감일(deadline)에 표시
+      const projectEvents: ScheduleEvent[] = (projects ?? [])
+        .filter((p: ProjectRow) => p.deadline)
+        .map((p: ProjectRow) => ({
+          id: p.id,
+          title: p.title,
+          date: (p.deadline as string).split("T")[0],
+          time: null,
+          type: "project" as const,
+          clientName: p.clients?.[0]?.company_name,
+          clientId: p.client_id ?? undefined,
+        }));
 
       setEvents([...meetingEvents, ...projectEvents]);
       setLoading(false);
@@ -101,13 +112,22 @@ export default function SchedulePage() {
     return map;
   }, [events]);
 
-  const selectedEvents = selectedDate ? (eventsByDate[selectedDate] ?? []) : [];
+  const byTime = (a: ScheduleEvent, b: ScheduleEvent) =>
+    (a.time ?? "99").localeCompare(b.time ?? "99");
+
+  const selectedEvents = selectedDate
+    ? [...(eventsByDate[selectedDate] ?? [])].sort(byTime)
+    : [];
   const today = new Date().toISOString().split("T")[0];
 
   const sortedEvents = useMemo(
-    () => [...events].sort((a, b) => a.date.localeCompare(b.date)),
+    () => [...events].sort((a, b) => a.date.localeCompare(b.date) || byTime(a, b)),
     [events]
   );
+
+  function openEvent(e: ScheduleEvent) {
+    router.push(e.type === "meeting" ? `/meetings/${e.id}` : `/projects/${e.id}`);
+  }
 
   return (
     <div>
@@ -225,7 +245,7 @@ export default function SchedulePage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-xs text-slate-500">진행중 프로젝트</span>
+                <span className="text-xs text-slate-500">프로젝트 마감</span>
               </div>
             </div>
           </div>
@@ -242,23 +262,31 @@ export default function SchedulePage() {
             )}
             <ul className="space-y-2">
               {selectedEvents.map((e) => (
-                <li key={e.id} className="flex items-start gap-2.5 p-3 rounded-lg bg-slate-50">
-                  <span className={`mt-1 w-2 h-2 rounded-full shrink-0 ${
-                    e.type === "meeting" ? "bg-blue-500" : "bg-emerald-500"
-                  }`} />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{e.title}</p>
-                    {e.clientName && (
-                      <p className="text-xs text-slate-400 mt-0.5">{e.clientName}</p>
-                    )}
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded mt-1 inline-block ${
-                      e.type === "meeting"
-                        ? "bg-blue-100 text-blue-600"
-                        : "bg-emerald-100 text-emerald-600"
-                    }`}>
-                      {e.type === "meeting" ? "미팅" : "프로젝트"}
-                    </span>
-                  </div>
+                <li key={`${e.type}-${e.id}`}>
+                  <button
+                    onClick={() => openEvent(e)}
+                    className="w-full text-left flex items-start gap-2.5 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <span className={`mt-1 w-2 h-2 rounded-full shrink-0 ${
+                      e.type === "meeting" ? "bg-blue-500" : "bg-emerald-500"
+                    }`} />
+                    <div className="min-w-0">
+                      {e.time && (
+                        <p className="text-xs font-semibold text-blue-600 mb-0.5">{formatTimeLabel(e.time)}</p>
+                      )}
+                      <p className="text-sm font-medium text-slate-800 truncate">{e.title}</p>
+                      {e.clientName && (
+                        <p className="text-xs text-slate-400 mt-0.5">{e.clientName}</p>
+                      )}
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded mt-1 inline-block ${
+                        e.type === "meeting"
+                          ? "bg-blue-100 text-blue-600"
+                          : "bg-emerald-100 text-emerald-600"
+                      }`}>
+                        {e.type === "meeting" ? "미팅" : "프로젝트 마감"}
+                      </span>
+                    </div>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -270,7 +298,11 @@ export default function SchedulePage() {
             <div className="p-10 text-center text-slate-400 text-sm">예정된 일정 없음</div>
           ) : (
             sortedEvents.map((e) => (
-              <div key={e.id} className="flex items-center gap-4 px-5 py-4">
+              <button
+                key={`${e.type}-${e.id}`}
+                onClick={() => openEvent(e)}
+                className="w-full text-left flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors"
+              >
                 <div className="text-center w-10 shrink-0">
                   <p className="text-[10px] text-slate-400 leading-none">{e.date.slice(5, 7)}월</p>
                   <p className="text-xl font-bold text-slate-900 leading-tight">{e.date.slice(8, 10)}</p>
@@ -279,7 +311,10 @@ export default function SchedulePage() {
                   e.type === "meeting" ? "bg-blue-500" : "bg-emerald-500"
                 }`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{e.title}</p>
+                  <p className="text-sm font-medium text-slate-800 truncate">
+                    {e.time && <span className="text-blue-600 font-semibold mr-1.5">{formatTimeLabel(e.time)}</span>}
+                    {e.title}
+                  </p>
                   {e.clientName && (
                     <p className="text-xs text-slate-400 mt-0.5">{e.clientName}</p>
                   )}
@@ -289,9 +324,9 @@ export default function SchedulePage() {
                     ? "bg-blue-50 text-blue-600"
                     : "bg-emerald-50 text-emerald-600"
                 }`}>
-                  {e.type === "meeting" ? "미팅" : "프로젝트"}
+                  {e.type === "meeting" ? "미팅" : "프로젝트 마감"}
                 </span>
-              </div>
+              </button>
             ))
           )}
         </div>
