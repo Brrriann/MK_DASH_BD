@@ -19,6 +19,7 @@ import {
   deleteLead,
 } from "@/lib/actions/lead-actions";
 import { ConvertLeadDialog } from "./ConvertLeadDialog";
+import { LeadEditSheet } from "./LeadFormSheet";
 
 const STATUS_COLUMNS: {
   status: LeadStatus;
@@ -106,6 +107,7 @@ interface LeadCardProps {
   onStatusChange: (id: string, status: LeadStatus) => void;
   onDelete: (id: string) => void;
   onConvert: (lead: Lead) => void;
+  onEdit: (lead: Lead) => void;
   isPending: boolean;
 }
 
@@ -115,6 +117,7 @@ function LeadCard({
   onStatusChange,
   onDelete,
   onConvert,
+  onEdit,
   isPending,
 }: LeadCardProps) {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -315,8 +318,7 @@ function LeadCard({
                   <button
                     onClick={() => {
                       setShowActionMenu(false);
-                      // 편집 기능은 향후 확장 - 지금은 콘솔 안내
-                      alert("편집 기능은 추후 지원 예정입니다.");
+                      onEdit(lead);
                     }}
                     className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                   >
@@ -357,6 +359,7 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
     Record<string, LeadStatus>
   >({});
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
   function handleStatusChange(id: string, status: LeadStatus) {
     setOptimisticStatuses((prev) => ({ ...prev, [id]: status }));
@@ -426,6 +429,13 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
       lead={convertingLead}
       onClose={() => setConvertingLead(null)}
     />
+    {editingLead && (
+      <LeadEditSheet
+        lead={editingLead}
+        open={!!editingLead}
+        onOpenChange={(o) => { if (!o) setEditingLead(null); }}
+      />
+    )}
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {STATUS_COLUMNS.map((col) => {
         const colLeads = grouped[col.status] ?? [];
@@ -461,6 +471,7 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
                     onStatusChange={handleStatusChange}
                     onDelete={handleDelete}
                     onConvert={setConvertingLead}
+                    onEdit={setEditingLead}
                     isPending={
                       isPending && optimisticStatuses[lead.id] !== undefined
                     }
