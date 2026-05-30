@@ -43,6 +43,13 @@ const STATUS_COLUMNS: {
     dot: "bg-amber-500",
   },
   {
+    status: "미팅완료",
+    label: "미팅완료",
+    color: "text-cyan-700",
+    bg: "bg-cyan-50",
+    dot: "bg-cyan-500",
+  },
+  {
     status: "계약",
     label: "계약",
     color: "text-green-700",
@@ -78,6 +85,7 @@ const SOURCE_COLORS: Record<string, string> = {
 const ALL_STATUSES: LeadStatus[] = [
   "신규",
   "견적발송",
+  "미팅완료",
   "계약",
   "보류",
   "실패",

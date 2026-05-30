@@ -19,6 +19,7 @@ const STATUSES = [
   { value: "all", label: "전체" },
   { value: "신규", label: "신규" },
   { value: "견적발송", label: "견적발송" },
+  { value: "미팅완료", label: "미팅완료" },
   { value: "계약", label: "계약" },
   { value: "실패", label: "실패" },
   { value: "보류", label: "보류" },
