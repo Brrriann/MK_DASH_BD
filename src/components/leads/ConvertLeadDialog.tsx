@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Buildings, User, Envelope, Phone, Briefcase } from "@phosphor-icons/react";
 import {
@@ -49,6 +49,27 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
     contract_amount: lead?.budget_estimate ?? undefined,
     deadline: "",
   });
+
+  // lead가 바뀌면(null→리드 포함) 리드 값으로 폼 재prefill
+  useEffect(() => {
+    if (!lead) return;
+    setWithProject(!!lead.service_interest);
+    setClient({
+      company_name: lead.company ?? lead.name ?? "",
+      contact_name: lead.name ?? "",
+      email: lead.email ?? "",
+      phone: lead.phone ?? "",
+    });
+    setProject({
+      title: lead.service_interest
+        ? `[${lead.company ?? lead.name}] ${lead.service_interest}`
+        : "",
+      service_type: "",
+      contract_amount: lead.budget_estimate ?? undefined,
+      deadline: "",
+    });
+    setError(null);
+  }, [lead]);
 
   function setC<K extends keyof ConvertClientData>(k: K, v: ConvertClientData[K]) {
     setClient((prev) => ({ ...prev, [k]: v }));
