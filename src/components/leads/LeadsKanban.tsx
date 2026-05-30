@@ -436,47 +436,44 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
         onOpenChange={(o) => { if (!o) setEditingLead(null); }}
       />
     )}
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="flex flex-col rounded-xl border border-slate-200 divide-y divide-slate-200">
       {STATUS_COLUMNS.map((col) => {
         const colLeads = grouped[col.status] ?? [];
         return (
-          <div key={col.status} className="flex flex-col gap-2">
-            {/* 컬럼 헤더 */}
-            <div className="flex items-center gap-2 px-0.5">
-              <span
-                className={`h-2 w-2 rounded-full ${col.dot}`}
-              />
-              <span className={`text-sm font-semibold ${col.color}`}>
-                {col.label}
-              </span>
-              <span className="ml-auto text-xs font-medium text-slate-400 bg-slate-100 rounded-full px-2 py-0.5">
-                {colLeads.length}
-              </span>
+          <div key={col.status} className="flex min-h-[110px]">
+            {/* 좌측 분류 헤더 (세로) */}
+            <div className={`w-28 flex-shrink-0 ${col.bg} border-r border-slate-100 px-4 py-4 flex flex-col gap-1`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${col.dot}`} />
+                <span className={`text-xs font-bold ${col.color}`}>{col.label}</span>
+              </div>
+              <span className="text-[11px] text-slate-500 pl-4">{colLeads.length}명</span>
             </div>
 
-            {/* 카드 목록 */}
-            <div className="flex flex-col gap-2">
+            {/* 카드 영역 (가로 흐름) */}
+            <div className="flex-1 px-4 py-4 min-w-0">
               {colLeads.length === 0 ? (
-                <div
-                  className={`rounded-xl border border-dashed border-slate-200 py-6 flex items-center justify-center ${col.bg}`}
-                >
-                  <p className="text-xs text-slate-400">없음</p>
+                <div className="flex items-center h-full">
+                  <p className="text-[11px] text-slate-300">없음</p>
                 </div>
               ) : (
-                colLeads.map((lead) => (
-                  <LeadCard
-                    key={lead.id}
-                    lead={lead}
-                    today={today}
-                    onStatusChange={handleStatusChange}
-                    onDelete={handleDelete}
-                    onConvert={setConvertingLead}
-                    onEdit={setEditingLead}
-                    isPending={
-                      isPending && optimisticStatuses[lead.id] !== undefined
-                    }
-                  />
-                ))
+                <div className="flex gap-3 flex-wrap">
+                  {colLeads.map((lead) => (
+                    <div key={lead.id} className="w-72 flex-shrink-0">
+                      <LeadCard
+                        lead={lead}
+                        today={today}
+                        onStatusChange={handleStatusChange}
+                        onDelete={handleDelete}
+                        onConvert={setConvertingLead}
+                        onEdit={setEditingLead}
+                        isPending={
+                          isPending && optimisticStatuses[lead.id] !== undefined
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
