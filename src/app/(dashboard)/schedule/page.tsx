@@ -25,7 +25,9 @@ interface MeetingRow {
   met_at: string;
   met_time: string | null;
   client_id: string | null;
+  lead_id: string | null;
   clients: { company_name: string }[] | null;
+  leads: { name: string }[] | null;
 }
 
 interface ProjectRow {
@@ -59,7 +61,7 @@ export default function SchedulePage() {
       const [{ data: meetings }, { data: projects }] = await Promise.all([
         supabase
           .from("meeting_notes")
-          .select("id, title, met_at, met_time, client_id, clients(company_name)")
+          .select("id, title, met_at, met_time, client_id, lead_id, clients(company_name), leads(name)")
           .gte("met_at", today)
           .order("met_at", { ascending: true }),
         supabase
@@ -75,7 +77,7 @@ export default function SchedulePage() {
         date: m.met_at.split("T")[0],
         time: m.met_time,
         type: "meeting" as const,
-        clientName: m.clients?.[0]?.company_name,
+        clientName: m.clients?.[0]?.company_name ?? m.leads?.[0]?.name,
         clientId: m.client_id ?? undefined,
       }));
 

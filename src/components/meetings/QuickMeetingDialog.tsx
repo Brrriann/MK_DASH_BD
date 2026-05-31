@@ -14,20 +14,40 @@ import { createMeetingNote } from "@/lib/actions/meetings";
 import type { MeetingMethod } from "@/lib/types";
 
 interface QuickMeetingDialogProps {
-  clientId: string;
+  /** 클라이언트 미팅이면 clientId, 리드 미팅이면 leadId 중 하나 지정 */
+  clientId?: string;
+  leadId?: string;
   onCreated?: () => void;
-  /** 트리거 버튼 스타일 (compact: 작은 버튼) */
+  /** 트리거 버튼 스타일 (compact: 작은 버튼) — controlled 모드에선 무시 */
   variant?: "default" | "compact";
+  /** controlled 모드: open/onOpenChange를 주면 자체 트리거 버튼을 렌더하지 않음 */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function QuickMeetingDialog({ clientId, onCreated, variant = "default" }: QuickMeetingDialogProps) {
-  const [open, setOpen] = useState(false);
+export function QuickMeetingDialog({
+  clientId,
+  leadId,
+  onCreated,
+  variant = "default",
+  open: controlledOpen,
+  onOpenChange,
+}: QuickMeetingDialogProps) {
+  const isControlled = controlledOpen !== undefined;
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+
   const [title, setTitle] = useState("");
   const [metAt, setMetAt] = useState(new Date().toISOString().split("T")[0]);
   const [metTime, setMetTime] = useState("");
   const [method, setMethod] = useState<MeetingMethod | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function setOpen(o: boolean) {
+    if (isControlled) onOpenChange?.(o);
+    else setUncontrolledOpen(o);
+  }
 
   function reset() {
     setTitle("");
@@ -45,7 +65,8 @@ export function QuickMeetingDialog({ clientId, onCreated, variant = "default" }:
     try {
       await createMeetingNote({
         title: title.trim(),
-        client_id: clientId,
+        client_id: clientId ?? null,
+        lead_id: leadId ?? null,
         met_at: metAt,
         met_time: metTime || null,
         attendees: [],
@@ -68,10 +89,12 @@ export function QuickMeetingDialog({ clientId, onCreated, variant = "default" }:
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={triggerCls}>
-        <CalendarPlus size={variant === "compact" ? 12 : 16} weight="regular" />
-        미팅 일정 추가
-      </button>
+      {!isControlled && (
+        <button type="button" onClick={() => setOpen(true)} className={triggerCls}>
+          <CalendarPlus size={variant === "compact" ? 12 : 16} weight="regular" />
+          미팅 일정 추가
+        </button>
+      )}
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
         <DialogContent>

@@ -5,11 +5,13 @@ import type { MeetingNote, MeetingMethod } from "@/lib/types";
 
 export interface MeetingNoteWithClient extends MeetingNote {
   client?: { company_name: string } | null;
+  lead?: { name: string; company: string | null } | null;
 }
 
 export interface CreateMeetingNoteInput {
   title: string;
-  client_id: string;
+  client_id?: string | null;
+  lead_id?: string | null;
   met_at: string;
   met_time?: string | null;
   attendees: string[];
@@ -27,7 +29,7 @@ export async function fetchMeetingNotes(
   const supabase = createAdminClient();
   let query = supabase
     .from("meeting_notes")
-    .select(`*, client:clients(company_name)`)
+    .select(`*, client:clients(company_name), lead:leads(name, company)`)
     .order("met_at", { ascending: false });
 
   if (clientId) {
@@ -39,13 +41,26 @@ export async function fetchMeetingNotes(
   return (data ?? []) as MeetingNoteWithClient[];
 }
 
+export async function fetchLeadMeetingNotes(
+  leadId: string
+): Promise<MeetingNoteWithClient[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("meeting_notes")
+    .select(`*, client:clients(company_name), lead:leads(name, company)`)
+    .eq("lead_id", leadId)
+    .order("met_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as MeetingNoteWithClient[];
+}
+
 export async function fetchMeetingNote(
   id: string
 ): Promise<MeetingNoteWithClient | null> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("meeting_notes")
-    .select(`*, client:clients(company_name)`)
+    .select(`*, client:clients(company_name), lead:leads(name, company)`)
     .eq("id", id)
     .single();
 

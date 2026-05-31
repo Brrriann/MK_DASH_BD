@@ -81,6 +81,11 @@ export async function convertLeadToClient(leadId: string) {
     .select().single();
   if (clientError) throw new Error(clientError.message);
 
+  await supabase
+    .from("meeting_notes")
+    .update({ client_id: client.id, lead_id: null })
+    .eq("lead_id", leadId);
+
   await supabase.from("leads").update({
     status: "계약",
     converted_client_id: client.id,
@@ -89,6 +94,7 @@ export async function convertLeadToClient(leadId: string) {
 
   revalidateTag("leads");
   revalidateTag("clients");
+  revalidateTag("meetings");
   return client;
 }
 
@@ -149,6 +155,12 @@ export async function convertLeadToClientWithProject(
     });
   }
 
+  // 리드에 달린 미팅을 새 고객으로 이전 (lead_id → client_id)
+  await supabase
+    .from("meeting_notes")
+    .update({ client_id: client.id, lead_id: null })
+    .eq("lead_id", leadId);
+
   // 리드 전환 처리 — 고객 전환 폼에서 수정된 이름/회사도 리드에 반영
   await supabase.from("leads").update({
     status: "계약",
@@ -161,5 +173,6 @@ export async function convertLeadToClientWithProject(
   revalidateTag("leads");
   revalidateTag("clients");
   revalidateTag("projects");
+  revalidateTag("meetings");
   return client;
 }

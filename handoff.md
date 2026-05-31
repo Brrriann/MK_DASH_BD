@@ -9,6 +9,17 @@
 
 ## 최근 완료 작업 (2026-05-29)
 
+### 리드 미팅 일정 ✅
+- DB: `018_meeting_lead_link.sql` — `meeting_notes.lead_id` 추가 (**Supabase 실행 필요**)
+- 미팅이 클라이언트 또는 리드에 속함 (둘 다 nullable)
+- 리드 칸반 카드 "더보기" → **미팅 추가** (QuickMeetingDialog leadId 모드)
+- `QuickMeetingDialog` 일반화: `clientId?`/`leadId?` + controlled open 모드
+- 전환 시 리드 미팅 자동 이전 (`lead_id`→`client_id`)
+- 캘린더·미팅 카드·상세에 리드명 표시
+
+### 리드 단계 변경 ✅
+신규 → 견적발송 → 미팅완료 → 계약 → 보류 → 실패 (`연락중` 제거, `미팅완료` 추가). 마이그레이션 016·017.
+
 ### 미팅 일정 + 캘린더 연동 ✅
 - DB: `015_meeting_time.sql` — `meeting_notes.met_time TIME` nullable 추가 (**Supabase에서 실행 필요**)
 - 미팅에 시간 입력/표시 (작성·편집·카드·상세 전부)

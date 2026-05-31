@@ -104,6 +104,7 @@ export interface Task {
 export interface MeetingNote {
   id: string;
   client_id: string | null;
+  lead_id: string | null;
   title: string;
   met_at: string;
   met_time: string | null;

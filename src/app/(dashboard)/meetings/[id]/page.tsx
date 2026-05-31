@@ -393,13 +393,21 @@ export default function MeetingDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
           {/* Sidebar metadata */}
           <div className="space-y-5">
-            {/* Client */}
-            {note.client?.company_name && (
+            {/* Client / Lead */}
+            {note.client?.company_name ? (
               <div>
                 <p className="text-xs text-slate-400 font-medium mb-1">클라이언트</p>
                 <p className="text-sm font-semibold text-slate-900">{note.client.company_name}</p>
               </div>
-            )}
+            ) : note.lead?.name ? (
+              <div>
+                <p className="text-xs text-slate-400 font-medium mb-1">리드</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  {note.lead.name}
+                  {note.lead.company && <span className="text-slate-400 font-normal ml-1">({note.lead.company})</span>}
+                </p>
+              </div>
+            ) : null}
 
             {/* Method */}
             {note.method && (

@@ -56,11 +56,15 @@ export function MeetingNoteCard({ note }: MeetingNoteCardProps) {
 
       {/* Badges row */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        {note.client?.company_name && (
+        {note.client?.company_name ? (
           <span className="text-xs bg-slate-50 border border-slate-200 text-slate-600 rounded-full px-2 py-0.5">
             {note.client.company_name}
           </span>
-        )}
+        ) : note.lead?.name ? (
+          <span className="text-xs bg-blue-50 border border-blue-200 text-blue-600 rounded-full px-2 py-0.5">
+            리드 · {note.lead.name}
+          </span>
+        ) : null}
         {note.method && (
           <span
             className={`text-xs rounded-full px-2 py-0.5 font-medium ${METHOD_CHIP_CLASS[note.method]}`}

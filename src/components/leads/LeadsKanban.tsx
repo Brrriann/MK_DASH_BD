@@ -11,6 +11,7 @@ import {
   DotsThree,
   Trash,
   PencilSimple,
+  CalendarPlus,
   ChatText,
 } from "@phosphor-icons/react";
 import type { Lead, LeadStatus } from "@/lib/types";
@@ -20,6 +21,7 @@ import {
 } from "@/lib/actions/lead-actions";
 import { ConvertLeadDialog } from "./ConvertLeadDialog";
 import { LeadEditSheet } from "./LeadFormSheet";
+import { QuickMeetingDialog } from "@/components/meetings/QuickMeetingDialog";
 
 const STATUS_COLUMNS: {
   status: LeadStatus;
@@ -108,6 +110,7 @@ interface LeadCardProps {
   onDelete: (id: string) => void;
   onConvert: (lead: Lead) => void;
   onEdit: (lead: Lead) => void;
+  onMeeting: (lead: Lead) => void;
   isPending: boolean;
 }
 
@@ -118,6 +121,7 @@ function LeadCard({
   onDelete,
   onConvert,
   onEdit,
+  onMeeting,
   isPending,
 }: LeadCardProps) {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -328,6 +332,16 @@ function LeadCard({
                   <button
                     onClick={() => {
                       setShowActionMenu(false);
+                      onMeeting(lead);
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <CalendarPlus size={13} />
+                    미팅 추가
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowActionMenu(false);
                       if (confirm(`"${lead.name}" 리드를 삭제하시겠습니까?`)) {
                         onDelete(lead.id);
                       }
@@ -360,6 +374,7 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
   >({});
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [meetingLead, setMeetingLead] = useState<Lead | null>(null);
 
   function handleStatusChange(id: string, status: LeadStatus) {
     setOptimisticStatuses((prev) => ({ ...prev, [id]: status }));
@@ -436,6 +451,14 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
         onOpenChange={(o) => { if (!o) setEditingLead(null); }}
       />
     )}
+    {meetingLead && (
+      <QuickMeetingDialog
+        leadId={meetingLead.id}
+        open={!!meetingLead}
+        onOpenChange={(o) => { if (!o) setMeetingLead(null); }}
+        onCreated={() => { setMeetingLead(null); router.refresh(); }}
+      />
+    )}
     <div className="flex flex-col rounded-xl border border-slate-200 divide-y divide-slate-200">
       {STATUS_COLUMNS.map((col) => {
         const colLeads = grouped[col.status] ?? [];
@@ -467,6 +490,7 @@ export function LeadsKanban({ leads, today }: LeadsKanbanProps) {
                         onDelete={handleDelete}
                         onConvert={setConvertingLead}
                         onEdit={setEditingLead}
+                        onMeeting={setMeetingLead}
                         isPending={
                           isPending && optimisticStatuses[lead.id] !== undefined
                         }
