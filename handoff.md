@@ -60,6 +60,12 @@
 - 이메일 발송 임시 비활성화 (도메인 미인증)
 - `clients/[id]`: 새 견적서/계약서 버튼 → Link 교체
 
+## 최근 완료 작업 (2026-06-19)
+
+### 비밀번호 재설정 콜백 수정 ✅
+- `/auth/callback`, `/api/auth/callback` — `type=recovery` 시 `/reset-password`로 강제 리다이렉트
+- `token_hash` + `verifyOtp` 방식 처리 추가 (Supabase 이메일 링크 방식 모두 커버)
+
 ## 알려진 이슈
 
 - **Supabase Storage 버킷 미생성**: `estimates`, `contracts` 버킷을 Supabase 대시보드에서 Public으로 직접 생성 필요 — 없으면 파일 업로드 실패
