@@ -14,7 +14,15 @@ function loginRedirect(request: NextRequest): NextResponse {
 }
 
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
-  const { pathname } = new URL(request.url);
+  const { pathname, searchParams, origin } = new URL(request.url);
+
+  // Supabase password recovery lands at Site URL with token_hash — forward to callback
+  if (searchParams.get("token_hash") && searchParams.get("type") === "recovery") {
+    const callbackUrl = new URL("/auth/callback", origin);
+    callbackUrl.searchParams.set("token_hash", searchParams.get("token_hash")!);
+    callbackUrl.searchParams.set("type", "recovery");
+    return NextResponse.redirect(callbackUrl);
+  }
 
   // Always allow public paths without auth check
   if (isPublicPath(pathname)) {
