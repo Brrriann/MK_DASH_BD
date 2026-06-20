@@ -60,6 +60,17 @@
 - 이메일 발송 임시 비활성화 (도메인 미인증)
 - `clients/[id]`: 새 견적서/계약서 버튼 → Link 교체
 
+## 최근 완료 작업 (2026-06-20)
+
+### 비밀번호 재설정 + 리드→고객 전환 버그 수정 ✅
+- 비번 재설정 콜백: `token_hash + type=recovery` 처리, `/reset-password`로 리다이렉트
+- 비번 재설정 이메일: `redirectTo` 제거 → Supabase Site URL 기본값 사용 (allowlist 불필요)
+- 미들웨어: recovery 토큰 감지 시 `/auth/callback`으로 포워딩
+- 리드→고객 전환: 서버 액션 throw → `{ success, error }` 반환 방식으로 변경 (Server Components render 오류 방지)
+- 프로젝트 생성 실패해도 고객 전환 계속 진행
+- 이메일 필수 입력 제거 (비워두면 `lead-{id}@noemail.local` 자동 생성)
+- DB: `service_type`, `pipeline_stage`, `source_channel` ENUM → TEXT 변환 (019 마이그레이션, Supabase 실행 완료)
+
 ## 최근 완료 작업 (2026-06-19)
 
 ### 비밀번호 재설정 콜백 수정 ✅
