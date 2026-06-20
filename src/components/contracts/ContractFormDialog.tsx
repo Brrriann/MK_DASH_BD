@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Sparkle } from "@phosphor-icons/react";
 import { createContract, updateContract, type Contract, type CreateContractInput } from "@/lib/actions/contracts";
+import { formatAmount, parseAmount } from "@/lib/utils/input-formatters";
 import type { ClientWithRevenue, ContractStatus } from "@/lib/types";
 
 interface ContractFormDialogProps {
@@ -57,11 +58,11 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
       setClientId(contract?.client_id ?? NONE_VALUE);
       setSignedAt(contract?.signed_at ? contract.signed_at.split("T")[0] : "");
       setExpiresAt(contract?.expires_at ? contract.expires_at.split("T")[0] : "");
-      setContractAmount(contract?.contract_amount?.toString() ?? "");
-      setDepositAmount(contract?.deposit_amount?.toString() ?? "");
+      setContractAmount(contract?.contract_amount ? formatAmount(contract.contract_amount.toString()) : "");
+      setDepositAmount(contract?.deposit_amount ? formatAmount(contract.deposit_amount.toString()) : "");
       setDepositPaid(contract?.deposit_paid ?? false);
       setDepositPaidAt(contract?.deposit_paid_at ?? "");
-      setFinalAmount(contract?.final_amount?.toString() ?? "");
+      setFinalAmount(contract?.final_amount ? formatAmount(contract.final_amount.toString()) : "");
       setFinalPaid(contract?.final_paid ?? false);
       setFinalPaidAt(contract?.final_paid_at ?? "");
       setTerms(contract?.terms ?? "");
@@ -85,7 +86,7 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
         body: JSON.stringify({
           scope: scope.trim(),
           clientName,
-          amount: contractAmount ? Number(contractAmount) : undefined,
+          amount: parseAmount(contractAmount) ?? undefined,
           startDate: signedAt || undefined,
           endDate: expiresAt || undefined,
         }),
@@ -142,11 +143,11 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
       client_id: clientId === NONE_VALUE ? null : clientId,
       signed_at: signedAt || null,
       expires_at: expiresAt || null,
-      contract_amount: contractAmount ? Number(contractAmount) : null,
-      deposit_amount: depositAmount ? Number(depositAmount) : null,
+      contract_amount: parseAmount(contractAmount),
+      deposit_amount: parseAmount(depositAmount),
       deposit_paid: depositPaid,
       deposit_paid_at: depositPaid && depositPaidAt ? depositPaidAt : null,
-      final_amount: finalAmount ? Number(finalAmount) : null,
+      final_amount: parseAmount(finalAmount),
       final_paid: finalPaid,
       final_paid_at: finalPaid && finalPaidAt ? finalPaidAt : null,
       terms: terms.trim() || null,
@@ -225,9 +226,9 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
           {/* 계약금액 */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="cont-amount" className="text-sm text-slate-700 font-medium">계약금액 (원)</Label>
-            <Input id="cont-amount" type="number" value={contractAmount}
-              onChange={(e) => setContractAmount(e.target.value)}
-              placeholder="계약 금액" className="font-outfit" min={0} />
+            <Input id="cont-amount" type="text" inputMode="numeric" value={contractAmount}
+              onChange={(e) => setContractAmount(formatAmount(e.target.value))}
+              placeholder="0" className="font-outfit" />
           </div>
 
           {/* 입금 추적 */}
@@ -236,9 +237,9 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
             <div className="space-y-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="deposit-amt" className="text-xs text-slate-600">계약금</Label>
-                <Input id="deposit-amt" type="number" value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="계약금 금액 (원)" className="font-outfit h-8 text-sm" min={0} />
+                <Input id="deposit-amt" type="text" inputMode="numeric" value={depositAmount}
+                  onChange={(e) => setDepositAmount(formatAmount(e.target.value))}
+                  placeholder="0" className="font-outfit h-8 text-sm" />
               </div>
               <div className="flex items-center gap-3">
                 <input type="checkbox" id="deposit-paid" checked={depositPaid}
@@ -254,9 +255,9 @@ export function ContractFormDialog({ open, onClose, contract, clients, onSaved }
             <div className="space-y-2 border-t border-slate-200 pt-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="final-amt" className="text-xs text-slate-600">잔금</Label>
-                <Input id="final-amt" type="number" value={finalAmount}
-                  onChange={(e) => setFinalAmount(e.target.value)}
-                  placeholder="잔금 금액 (원)" className="font-outfit h-8 text-sm" min={0} />
+                <Input id="final-amt" type="text" inputMode="numeric" value={finalAmount}
+                  onChange={(e) => setFinalAmount(formatAmount(e.target.value))}
+                  placeholder="0" className="font-outfit h-8 text-sm" />
               </div>
               <div className="flex items-center gap-3">
                 <input type="checkbox" id="final-paid" checked={finalPaid}

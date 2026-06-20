@@ -14,6 +14,7 @@ import {
   type ConvertClientData,
   type ConvertProjectData,
 } from "@/lib/actions/lead-actions";
+import { formatAmount, parseAmount } from "@/lib/utils/input-formatters";
 import type { Lead } from "@/lib/types";
 
 const SERVICE_TYPES = [
@@ -46,9 +47,12 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
       ? `[${lead.company ?? lead?.name}] ${lead.service_interest}`
       : "",
     service_type: "",
-    contract_amount: lead?.budget_estimate ?? undefined,
+    contract_amount: undefined,
     deadline: "",
   });
+  const [contractAmountStr, setContractAmountStr] = useState(
+    lead?.budget_estimate ? formatAmount(String(lead.budget_estimate)) : ""
+  );
 
   // lead가 바뀌면(null→리드 포함) 리드 값으로 폼 재prefill
   useEffect(() => {
@@ -65,9 +69,10 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
         ? `[${lead.company ?? lead.name}] ${lead.service_interest}`
         : "",
       service_type: "",
-      contract_amount: lead.budget_estimate ?? undefined,
+      contract_amount: undefined,
       deadline: "",
     });
+    setContractAmountStr(lead.budget_estimate ? formatAmount(String(lead.budget_estimate)) : "");
     setError(null);
   }, [lead]);
 
@@ -104,7 +109,7 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
         ? {
             title: project.title.trim(),
             service_type: project.service_type || undefined,
-            contract_amount: project.contract_amount || undefined,
+            contract_amount: parseAmount(contractAmountStr) ?? undefined,
             deadline: project.deadline || undefined,
           }
         : undefined
@@ -271,13 +276,10 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-medium text-slate-600">계약금액 (원)</label>
                   <input
-                    type="number"
-                    min={0}
-                    step={10000}
-                    value={project.contract_amount ?? ""}
-                    onChange={(e) =>
-                      setP("contract_amount", e.target.value ? Number(e.target.value) : undefined)
-                    }
+                    type="text"
+                    inputMode="numeric"
+                    value={contractAmountStr}
+                    onChange={(e) => setContractAmountStr(formatAmount(e.target.value))}
                     placeholder="0"
                     className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
                   />
