@@ -108,7 +108,19 @@ SUPABASE_SERVICE_ROLE_KEY
 RESEND_API_KEY
 RESEND_FROM
 NVIDIA_API_KEY
-BOLTA_API_KEY
-BOLTA_CUSTOMER_KEY
+BOLTA_API_KEY          # (구) 볼타 — 팝빌로 교체 중, 추후 제거
+BOLTA_CUSTOMER_KEY     # (구) 볼타
+POPBILL_LINK_ID        # 팝빌 LinkID (LinkHub 발급)
+POPBILL_SECRET_KEY     # 팝빌 SecretKey
+POPBILL_CORP_NUM       # 발행 주체(공급자) 사업자번호 — 팝빌 등록 연동회원, 하이픈X
+POPBILL_IS_TEST=true   # 테스트베드. 운영 전환 시 false
+POPBILL_USER_ID        # (선택) 팝빌 회원 아이디
 NEXT_PUBLIC_APP_URL=https://mk-dash-bd.official-f0c.workers.dev
 ```
+
+## 팝빌(Popbill) 세금계산서 연동 (진행 중)
+
+- 골격: `src/lib/popbill.ts`(SDK 래퍼) + `/api/popbill/issue`(정발행) + InvoiceFormDialog `handlePopbillIssue`
+- 발행 버튼이 볼타 → **팝빌**로 전환됨. 공급자 정보는 서버가 인증 사용자의 `business_profile`에서 채움
+- ⚠️ **검증 필요**: 팝빌 SDK는 node `https`/`crypto` 사용 → Cloudflare Workers(nodejs_compat)에서 동작하는지 **테스트베드 키로 1차 배포 검증** 필요. 실패 시 `src/lib/popbill.ts`만 fetch+WebCrypto REST로 교체
+- 발행 식별자(문서관리번호)는 임시로 `bolta_issuance_key` 컬럼 재사용 (추후 `popbill_mgt_key` 컬럼 분리 권장)
