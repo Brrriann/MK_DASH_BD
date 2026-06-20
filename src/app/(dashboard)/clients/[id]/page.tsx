@@ -654,7 +654,7 @@ export default function ClientDetailPage() {
                         <tr key={ti.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
                           onClick={() => { setEditingInvoice(ti as unknown as TaxInvoice); setInvoiceDialogOpen(true); }}>
                           <td className="px-4 py-3 text-sm text-slate-900 font-medium">{ti.title}</td>
-                          <td className="px-4 py-3 text-sm text-slate-700 font-outfit">{formatKRW(ti.amount)}</td>
+                          <td className="px-4 py-3 text-sm text-slate-700 font-outfit">{formatKRW(ti.total_amount)}</td>
                           <td className="px-4 py-3 text-sm text-slate-500">{formatDate(ti.issued_at)}</td>
                           <td className="px-4 py-3">
                             {ti.pdf_url ? (

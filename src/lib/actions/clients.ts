@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Client, ClientWithRevenue, Project, TaxInvoice, Estimate, Contract } from "@/lib/types";
 
@@ -60,6 +61,8 @@ export async function updateClient(id: string, data: Partial<Client>): Promise<C
     .select()
     .single();
   if (error) throw new Error(error.message);
+  revalidateTag("clients");
+  revalidateTag("dashboard");
   return client;
 }
 
@@ -67,6 +70,8 @@ export async function deleteClient(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("clients").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  revalidateTag("clients");
+  revalidateTag("dashboard");
 }
 
 export async function fetchClientProjects(clientId: string): Promise<Project[]> {

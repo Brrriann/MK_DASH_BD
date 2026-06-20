@@ -20,6 +20,7 @@ import {
 import { deleteEstimate } from "@/lib/actions/estimates";
 import { deleteContract } from "@/lib/actions/contracts";
 import { deleteInvoice } from "@/lib/actions/invoices";
+import { formatKRW } from "@/lib/utils";
 
 // ---- Types ----
 type EstimateStatus = "pending" | "expired";
@@ -107,13 +108,6 @@ interface DocumentsTabsProps {
 }
 
 // ---- Formatters ----
-function formatKRW(n: number) {
-  return new Intl.NumberFormat("ko-KR", {
-    style: "currency",
-    currency: "KRW",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 function formatDate(s: string | null) {
   if (!s) return "—";
   return new Intl.DateTimeFormat("ko-KR", {

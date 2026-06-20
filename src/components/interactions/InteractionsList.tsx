@@ -12,6 +12,7 @@ import {
   Bell,
 } from "@phosphor-icons/react";
 import { deleteInteraction } from "@/lib/actions/interaction-actions";
+import { formatDate } from "@/lib/utils";
 
 type InteractionType = "call" | "kakao" | "email" | "meeting" | "memo";
 
@@ -72,14 +73,6 @@ function formatDateTime(iso: string): string {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(iso));
-}
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
   }).format(new Date(iso));
 }
 
