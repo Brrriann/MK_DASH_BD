@@ -60,44 +60,6 @@ export async function updateLeadStatus(id: string, status: LeadStatus) {
   revalidateTag("leads");
 }
 
-export async function convertLeadToClient(leadId: string) {
-  const supabase = createAdminClient();
-
-  const { data: lead, error: fetchError } = await supabase
-    .from("leads").select("*").eq("id", leadId).single();
-  if (fetchError) throw new Error(fetchError.message);
-
-  const { data: client, error: clientError } = await supabase
-    .from("clients")
-    .insert({
-      company_name: lead.company ?? lead.name,
-      contact_name: lead.name,
-      email: lead.email ?? `${leadId}@placeholder.com`,
-      phone: lead.phone,
-      status: "active",
-      source: lead.source,
-      notes: lead.notes,
-    })
-    .select().single();
-  if (clientError) throw new Error(clientError.message);
-
-  await supabase
-    .from("meeting_notes")
-    .update({ client_id: client.id, lead_id: null })
-    .eq("lead_id", leadId);
-
-  await supabase.from("leads").update({
-    status: "계약",
-    converted_client_id: client.id,
-    updated_at: new Date().toISOString(),
-  }).eq("id", leadId);
-
-  revalidateTag("leads");
-  revalidateTag("clients");
-  revalidateTag("meetings");
-  return client;
-}
-
 // 파이프라인 전환: 고객 정보 수정 가능 + 프로젝트 선택 생성
 export type ConvertClientData = {
   company_name: string;

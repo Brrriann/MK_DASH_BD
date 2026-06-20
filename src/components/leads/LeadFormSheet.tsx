@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { createLead, updateLead, type LeadInput } from "@/lib/actions/lead-actions";
 import type { Lead, LeadSource } from "@/lib/types";
-import { formatPhone, formatAmount, parseAmount } from "@/lib/utils/input-formatters";
+import { formatPhone, parseAmount } from "@/lib/utils/input-formatters";
 
 const SOURCE_OPTIONS: LeadSource[] = [
   "숨고",

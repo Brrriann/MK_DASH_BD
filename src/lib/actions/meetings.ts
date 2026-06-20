@@ -41,19 +41,6 @@ export async function fetchMeetingNotes(
   return (data ?? []) as MeetingNoteWithClient[];
 }
 
-export async function fetchLeadMeetingNotes(
-  leadId: string
-): Promise<MeetingNoteWithClient[]> {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("meeting_notes")
-    .select(`*, client:clients(company_name), lead:leads(name, company)`)
-    .eq("lead_id", leadId)
-    .order("met_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as MeetingNoteWithClient[];
-}
-
 export async function fetchMeetingNote(
   id: string
 ): Promise<MeetingNoteWithClient | null> {
@@ -135,26 +122,3 @@ export async function fetchAllAttendees(): Promise<string[]> {
   return [...new Set(allNames)].sort();
 }
 
-export async function linkTaskToMeeting(
-  taskId: string,
-  meetingNoteId: string
-): Promise<void> {
-  const supabase = createAdminClient();
-  const { error } = await supabase
-    .from("task_meeting_notes")
-    .insert({ task_id: taskId, meeting_note_id: meetingNoteId });
-  if (error) throw new Error(error.message);
-}
-
-export async function unlinkTaskFromMeeting(
-  taskId: string,
-  meetingNoteId: string
-): Promise<void> {
-  const supabase = createAdminClient();
-  const { error } = await supabase
-    .from("task_meeting_notes")
-    .delete()
-    .eq("task_id", taskId)
-    .eq("meeting_note_id", meetingNoteId);
-  if (error) throw new Error(error.message);
-}
