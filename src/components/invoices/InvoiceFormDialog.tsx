@@ -94,13 +94,14 @@ export function InvoiceFormDialog({
   } | null>(null);
 
   useEffect(() => {
+    if (!open) return;
     getSupabase()
       .auth.getUser()
       .then(({ data: { user } }) => {
         const bp = user?.user_metadata?.business_profile;
         if (bp) setSupplierInfo(bp);
       });
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     if (open) {
