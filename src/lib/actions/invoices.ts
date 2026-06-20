@@ -67,9 +67,12 @@ export async function updateInvoice(
   data: Partial<TaxInvoice>
 ): Promise<TaxInvoice> {
   const supabase = createAdminClient();
+  // total_amount(정식 컬럼)와 legacy amount 컬럼이 어긋나지 않도록 미러링
+  const patch: Partial<TaxInvoice> = { ...data };
+  if (patch.total_amount !== undefined) patch.amount = patch.total_amount;
   const { data: invoice, error } = await supabase
     .from("tax_invoices")
-    .update(data)
+    .update(patch)
     .eq("id", id)
     .select()
     .single();

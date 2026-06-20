@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuth } from "@/lib/auth/guard";
 
 const BUCKET = "estimates";
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
 
 export async function POST(req: NextRequest) {
+  const unauth = await requireAuth();
+  if (unauth) return unauth;
+
   let formData: FormData;
   try {
     formData = await req.formData();

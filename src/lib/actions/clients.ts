@@ -1,25 +1,10 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Client, ClientWithRevenue, ClientStatus, Project, MeetingNote, TaxInvoice, Estimate, Contract } from "@/lib/types";
+import type { Client, ClientWithRevenue, Project, TaxInvoice, Estimate, Contract } from "@/lib/types";
 
 export type { Estimate, Contract };
-
-export interface CreateClientInput {
-  company_name: string;
-  contact_name: string;
-  email: string;
-  phone?: string;
-  industry?: string;
-  status: ClientStatus;
-  source?: string;
-  notes?: string;
-  business_registration_number?: string;
-  representative_name?: string;
-  business_address?: string;
-  business_type?: string;
-  business_item?: string;
-}
 
 export async function fetchClients(params?: {
   search?: string;
@@ -67,31 +52,6 @@ export async function fetchClient(id: string): Promise<ClientWithRevenue | null>
   return data as ClientWithRevenue;
 }
 
-export async function createClient(data: CreateClientInput): Promise<Client> {
-  const supabase = createAdminClient();
-  const { data: client, error } = await supabase
-    .from("clients")
-    .insert({
-      company_name: data.company_name,
-      contact_name: data.contact_name,
-      email: data.email,
-      phone: data.phone ?? null,
-      industry: data.industry ?? null,
-      status: data.status,
-      source: data.source ?? null,
-      notes: data.notes ?? null,
-      business_registration_number: data.business_registration_number ?? null,
-      representative_name: data.representative_name ?? null,
-      business_address: data.business_address ?? null,
-      business_type: data.business_type ?? null,
-      business_item: data.business_item ?? null,
-    })
-    .select()
-    .single();
-  if (error) throw new Error(error.message);
-  return client;
-}
-
 export async function updateClient(id: string, data: Partial<Client>): Promise<Client> {
   const supabase = createAdminClient();
   const { data: client, error } = await supabase
@@ -101,6 +61,8 @@ export async function updateClient(id: string, data: Partial<Client>): Promise<C
     .select()
     .single();
   if (error) throw new Error(error.message);
+  revalidateTag("clients");
+  revalidateTag("dashboard");
   return client;
 }
 
@@ -108,6 +70,8 @@ export async function deleteClient(id: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase.from("clients").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  revalidateTag("clients");
+  revalidateTag("dashboard");
 }
 
 export async function fetchClientProjects(clientId: string): Promise<Project[]> {
@@ -154,13 +118,3 @@ export async function fetchClientTaxInvoices(clientId: string): Promise<TaxInvoi
   return (data ?? []) as TaxInvoice[];
 }
 
-export async function fetchClientMeetingNotes(clientId: string): Promise<MeetingNote[]> {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("meeting_notes")
-    .select("*")
-    .eq("client_id", clientId)
-    .order("met_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as MeetingNote[];
-}

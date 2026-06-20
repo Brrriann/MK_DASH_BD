@@ -84,7 +84,7 @@ export default function InvoicesPage() {
     });
   }
 
-  const totalAmount = invoices.reduce((sum, inv) => sum + inv.amount, 0);
+  const totalAmount = invoices.reduce((sum, inv) => sum + inv.total_amount, 0);
 
   return (
     <div className="font-outfit">
@@ -187,7 +187,7 @@ export default function InvoicesPage() {
                     </h3>
                   </div>
                   <p className="font-outfit text-lg font-bold text-slate-900 mb-1">
-                    {formatKRW(invoice.amount)}
+                    {formatKRW(invoice.total_amount)}
                   </p>
                   <p className="text-xs text-slate-400">
                     {clientName ? `${clientName} · ` : ""}
@@ -265,7 +265,7 @@ export default function InvoicesPage() {
                         {clientName || <span className="text-slate-300">—</span>}
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-slate-900">
-                        {formatKRW(invoice.amount)}
+                        {formatKRW(invoice.total_amount)}
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-600">
                         {formatDate(invoice.issued_at)}

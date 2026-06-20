@@ -271,14 +271,6 @@ export function InvoiceFormDialog({
   }
 
   async function handleBoltaIssue() {
-    console.log("[Bolta] handleBoltaIssue called", {
-      selectedClient: selectedClient?.id,
-      brn: selectedClient?.business_registration_number,
-      ocrBrn,
-      supplierInfo,
-      items,
-      supplyAmount,
-    });
     if (!selectedClient) {
       setError("클라이언트를 선택해주세요.");
       return;

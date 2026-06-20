@@ -3,7 +3,7 @@ export type TaskStatus = "todo" | "in_progress" | "done" | "on_hold";
 export type TaskPriority = "high" | "medium" | "low";
 export type MeetingMethod = "in_person" | "video" | "phone" | "email";
 export type EstimateStatus = "pending" | "expired";
-export type ContractStatus = "signed" | "pending" | "expired";
+export type ContractStatus = "signed" | "pending" | "expired" | "signature_requested";
 export type ProjectStatus = "active" | "completed" | "on_hold";
 export type PipelineStage = '상담' | '견적' | '계약' | '계산서발행' | '계약입금' | '착수' | '납품' | '완납';
 export type ServiceType = '웹개발' | '앱개발' | '소프트웨어개발' | '디자인' | '영상' | '강의/컨설팅' | '기타';
@@ -164,35 +164,6 @@ export interface Estimate {
   project_id: string | null;
   description: string | null;
   created_at: string;
-}
-
-export interface Interaction {
-  id: string;
-  lead_id: string | null;
-  client_id: string | null;
-  type: InteractionType;
-  summary: string;
-  content: string | null;
-  occurred_at: string;
-  follow_up_at: string | null;
-  created_at: string;
-}
-
-export interface Lead {
-  id: string;
-  name: string;
-  company: string | null;
-  phone: string | null;
-  email: string | null;
-  source: LeadSource;
-  status: LeadStatus;
-  service_interest: string | null;
-  budget_estimate: number | null;
-  notes: string | null;
-  follow_up_at: string | null;
-  converted_client_id: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Contract {

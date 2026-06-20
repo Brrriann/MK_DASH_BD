@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## 2026-06-20
+
+### 전체 코드 검수 + 3-Phase 수정 (병렬 에이전트 검수)
+
+**Phase 1 — 실제 버그**
+- 계약 생성 깨짐 수정: `POST /api/contracts`가 존재하지 않는 `deposit_ratio` 컬럼 insert → 제거
+- 보안: 미들웨어 `/api` 전체 공개 제거, deny-by-default 전환 (외부 토큰 경로만 공개: `/sign`, `/api/contracts/sign`, `/auth`)
+- 보안: 모든 mutation API 라우트에 `requireAuth()` 세션 가드 추가 (`src/lib/auth/guard.ts` 신규)
+- `interactions` 라우트 raw body spread → 컬럼 화이트리스트
+- `ContractStatus`에 `signature_requested` 추가 (DB CHECK·라우트와 일치)
+- 리드 전환 시 미팅 이전/리드 업데이트 오류 무시 → 체크 추가
+
+**Phase 2 — 죽은 코드 제거**
+- 죽은 파일 13개 삭제 (대시보드 위젯 4개, 미사용 다이얼로그 3개, ClientRow, ErrorBanner, ui/card, queries/dashboard, actions/revalidate, 중복 api/auth/callback)
+- 죽은 export 제거 (convertLeadToClient, clients.ts createClient 등, meetings.ts 3개, updateInteraction)
+- 미사용 의존성 `shadcn` 제거, 미사용 import 정리
+
+**Phase 3 — 논리 구조 정리**
+- 세금계산서 금액 표시를 `total_amount`로 단일화 (화면마다 `amount`/`total_amount` 혼용 → 다른 금액 표시 버그)
+- `updateInvoice`가 `amount`=`total_amount` 미러링 (컬럼 drift 방지)
+- 마이그레이션 021: 레거시 인보이스 `total_amount` 백필
+- `clients.ts` updateClient/deleteClient에 revalidateTag 추가 (캐시 불일치)
+- 중복 타입(`Interaction`·`Lead`) 제거, 동일 유틸(formatKRW·formatDate) 공유 함수로 통합
+- 위험한 `ALL_IN_ONE` SQL 삭제 (001~008만 포함, 깨진 스키마 생성)
+- 디버그 console.log 제거
+
 ## 2026-05-02
 
 ### 플로우 전면 개편

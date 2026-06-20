@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuth } from "@/lib/auth/guard";
 import type { InteractionInput } from "@/lib/actions/interaction-actions";
 
 export async function POST(req: Request) {
+  const unauth = await requireAuth();
+  if (unauth) return unauth;
+
   try {
     const body = (await req.json()) as InteractionInput;
     if (!body.summary?.trim()) {
@@ -11,8 +15,13 @@ export async function POST(req: Request) {
 
     const supabase = createAdminClient();
     const { error } = await supabase.from("interactions").insert({
-      ...body,
+      lead_id: body.lead_id ?? null,
+      client_id: body.client_id ?? null,
+      type: body.type,
+      summary: body.summary.trim(),
+      content: body.content ?? null,
       occurred_at: body.occurred_at ?? new Date().toISOString(),
+      follow_up_at: body.follow_up_at ?? null,
     });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });

@@ -38,3 +38,7 @@ next-env.d.ts
 # claude code / superpowers internal dirs
 .claude/
 .superpowers/
+
+# 잘못된 위치에 생성되는 빌드 아티팩트 방지
+src/.next/
+src/tsconfig.json

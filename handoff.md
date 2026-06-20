@@ -62,6 +62,13 @@
 
 ## 최근 완료 작업 (2026-06-20)
 
+### 전체 코드 검수 + 3-Phase 수정 ✅ (상세는 CHANGELOG)
+병렬 에이전트로 서버액션·API라우트·죽은코드·DB스키마 검수 후 정리.
+- **Phase 1 (버그)**: 계약생성 `deposit_ratio` 제거, API 인증 가드 전면(`src/lib/auth/guard.ts`) + 미들웨어 deny-by-default, `ContractStatus.signature_requested`, 리드전환 오류체크
+- **Phase 2 (죽은코드)**: 파일 13개·죽은 export 다수·`shadcn` 의존성 삭제
+- **Phase 3 (구조)**: 세금계산서 금액 `total_amount` 단일화 + 미러링, clients.ts 캐시 무효화, 중복 타입/유틸 제거, `ALL_IN_ONE` SQL 삭제
+- ⚠️ **Supabase 수동 실행 필요**: `021_backfill_invoice_total_amount.sql` (레거시 매출 백필)
+
 ### 비밀번호 재설정 + 리드→고객 전환 버그 수정 ✅
 - 비번 재설정 콜백: `token_hash + type=recovery` 처리, `/reset-password`로 리다이렉트
 - 비번 재설정 이메일: `redirectTo` 제거 → Supabase Site URL 기본값 사용 (allowlist 불필요)
@@ -86,9 +93,11 @@
 
 ## 다음 TODO
 
-1. Supabase Storage `estimates`, `contracts` 버킷 생성 (Public)
-2. 이메일 발송 재개 시 DNS 이전 or Resend 대안 검토
-3. 파비콘 크기 추가 조정 필요 시 `src/app/icon.svg` font-size 수정
+1. **`021_backfill_invoice_total_amount.sql` Supabase 실행** (레거시 매출 백필)
+2. Supabase Storage `estimates`, `contracts` 버킷 생성 (Public)
+3. 이메일 발송 재개 시 DNS 이전 or Resend 대안 검토
+4. (선택) `clients.ts` ↔ `client-actions.ts` 모듈 완전 통합 — 지금은 revalidate만 일치시킴, 함수 중복은 남아있음
+5. 파비콘 크기 추가 조정 필요 시 `src/app/icon.svg` font-size 수정
 
 ## 환경변수 (Cloudflare Workers 시크릿)
 

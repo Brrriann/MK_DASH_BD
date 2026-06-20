@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuth } from "@/lib/auth/guard";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauth = await requireAuth();
+  if (unauth) return unauth;
+
   const { id } = await params;
   let body: unknown;
   try {
@@ -29,6 +33,9 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauth = await requireAuth();
+  if (unauth) return unauth;
+
   const { id } = await params;
   const supabase = createAdminClient();
   const { error } = await supabase.from("estimates").delete().eq("id", id);

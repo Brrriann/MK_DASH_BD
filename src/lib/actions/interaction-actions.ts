@@ -23,13 +23,6 @@ export async function createInteraction(data: InteractionInput) {
   revalidateTag("leads");
 }
 
-export async function updateInteraction(id: string, data: Partial<InteractionInput>) {
-  const supabase = createAdminClient();
-  const { error } = await supabase.from("interactions").update(data).eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidateTag("interactions");
-}
-
 export async function deleteInteraction(id: string) {
   const supabase = createAdminClient();
   const { error } = await supabase.from("interactions").delete().eq("id", id);
