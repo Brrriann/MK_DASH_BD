@@ -23,7 +23,7 @@ import { deleteInvoice } from "@/lib/actions/invoices";
 
 // ---- Types ----
 type EstimateStatus = "pending" | "expired";
-type ContractStatus = "signed" | "pending" | "expired";
+type ContractStatus = "signed" | "pending" | "expired" | "signature_requested";
 
 interface EstimateItem {
   name: string;
@@ -134,11 +134,13 @@ const estimateStatusClass: Record<EstimateStatus, string> = {
 };
 const contractStatusLabel: Record<ContractStatus, string> = {
   signed: "서명완료",
+  signature_requested: "서명요청됨",
   pending: "대기중",
   expired: "만료",
 };
 const contractStatusClass: Record<ContractStatus, string> = {
   signed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  signature_requested: "bg-blue-50 text-blue-700 border border-blue-200",
   pending: "bg-amber-50 text-amber-700 border border-amber-200",
   expired: "bg-slate-100 text-slate-500 border border-slate-200",
 };

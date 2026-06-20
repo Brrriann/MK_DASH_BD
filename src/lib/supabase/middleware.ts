@@ -1,11 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Routes that do NOT require authentication
-const PUBLIC_PATHS = ["/login", "/portal", "/api", "/auth", "/reset-password"];
+// Routes that do NOT require authentication.
+// 주의: "/api" 전체를 공개하면 안 됨 — 외부 토큰 기반 경로만 명시적으로 허용한다.
+const PUBLIC_PATHS = [
+  "/login",
+  "/reset-password",
+  "/auth", // 인증 콜백 (/auth/callback)
+  "/portal", // 외부 클라이언트 포털 (토큰 기반)
+  "/sign", // 외부 계약 서명 페이지 (토큰 기반)
+  "/api/contracts/sign", // 외부 계약 서명 API
+  "/api/auth/callback", // 인증 콜백 API (안전망)
+];
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
 function loginRedirect(request: NextRequest): NextResponse {

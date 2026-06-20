@@ -162,19 +162,23 @@ export async function convertLeadToClientWithProject(
     }
 
     // 리드에 달린 미팅을 새 고객으로 이전
-    await supabase
+    const { error: meetingError } = await supabase
       .from("meeting_notes")
       .update({ client_id: client.id, lead_id: null })
       .eq("lead_id", leadId);
+    if (meetingError)
+      return { success: false, error: `미팅 이전 실패: ${meetingError.message}` };
 
     // 리드 전환 처리
-    await supabase.from("leads").update({
+    const { error: leadError } = await supabase.from("leads").update({
       status: "계약",
       converted_client_id: client.id,
       name: clientData.contact_name,
       company: clientData.company_name,
       updated_at: new Date().toISOString(),
     }).eq("id", leadId);
+    if (leadError)
+      return { success: false, error: `리드 전환 실패: ${leadError.message}` };
 
     revalidateTag("leads");
     revalidateTag("clients");

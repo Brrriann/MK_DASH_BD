@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuth } from "@/lib/auth/guard";
 import type { CreateProjectInput } from "@/lib/actions/projects";
 import { TASK_TEMPLATES } from "@/lib/task-templates";
 
 export async function POST(req: Request) {
+  const unauth = await requireAuth();
+  if (unauth) return unauth;
+
   try {
     const body = (await req.json()) as CreateProjectInput & { autoCreateTasks?: boolean };
     const supabase = createAdminClient();

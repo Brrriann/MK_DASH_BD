@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEstimate } from "@/lib/resend";
+import { requireAuth } from "@/lib/auth/guard";
 import type { Estimate } from "@/lib/types";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauth = await requireAuth();
+  if (unauth) return unauth;
+
   const { id } = await params;
 
   // Optional custom subject/body from request body
