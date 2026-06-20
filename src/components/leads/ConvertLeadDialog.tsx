@@ -85,10 +85,7 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
       setError("회사명과 담당자명은 필수입니다.");
       return;
     }
-    if (!client.email.trim()) {
-      setError("이메일은 필수입니다.");
-      return;
-    }
+
     if (withProject && !project.title.trim()) {
       setError("프로젝트명을 입력해 주세요.");
       return;
@@ -100,7 +97,7 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
       {
         company_name: client.company_name.trim(),
         contact_name: client.contact_name.trim(),
-        email: client.email.trim(),
+        email: client.email.trim() || `lead-${lead.id}@noemail.local`,
         phone: client.phone?.trim() || undefined,
       },
       withProject
@@ -186,14 +183,13 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-slate-600 flex items-center gap-1.5">
-                  <Envelope size={13} /> 이메일 <span className="text-red-500">*</span>
+                  <Envelope size={13} /> 이메일
                 </label>
                 <input
                   type="email"
-                  required
                   value={client.email}
                   onChange={(e) => setC("email", e.target.value)}
-                  placeholder="contact@example.com"
+                  placeholder="contact@example.com (선택)"
                   className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
                 />
               </div>
