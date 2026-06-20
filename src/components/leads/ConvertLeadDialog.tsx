@@ -95,31 +95,30 @@ export function ConvertLeadDialog({ lead, onClose }: ConvertLeadDialogProps) {
     }
     setLoading(true);
     setError(null);
-    try {
-      await convertLeadToClientWithProject(
-        lead.id,
-        {
-          company_name: client.company_name.trim(),
-          contact_name: client.contact_name.trim(),
-          email: client.email.trim(),
-          phone: client.phone?.trim() || undefined,
-        },
-        withProject
-          ? {
-              title: project.title.trim(),
-              service_type: project.service_type || undefined,
-              contract_amount: project.contract_amount || undefined,
-              deadline: project.deadline || undefined,
-            }
-          : undefined
-      );
-      onClose();
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "전환에 실패했습니다.");
-    } finally {
-      setLoading(false);
+    const result = await convertLeadToClientWithProject(
+      lead.id,
+      {
+        company_name: client.company_name.trim(),
+        contact_name: client.contact_name.trim(),
+        email: client.email.trim(),
+        phone: client.phone?.trim() || undefined,
+      },
+      withProject
+        ? {
+            title: project.title.trim(),
+            service_type: project.service_type || undefined,
+            contract_amount: project.contract_amount || undefined,
+            deadline: project.deadline || undefined,
+          }
+        : undefined
+    );
+    setLoading(false);
+    if (!result.success) {
+      setError(result.error);
+      return;
     }
+    onClose();
+    router.refresh();
   }
 
   if (!lead) return null;
