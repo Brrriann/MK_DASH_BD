@@ -50,22 +50,30 @@ export async function POST(req: NextRequest) {
   const invoiceNumber = `INV-${inv.id.slice(0, 8).toUpperCase()}`;
   const items: InvoiceItem[] = Array.isArray(inv.items) ? inv.items as InvoiceItem[] : [];
 
-  const pdfBuffer = await renderToBuffer(
-    createElement(InvoicePdf, {
-      invoiceNumber,
-      title: inv.title,
-      issuedAt: inv.issued_at ? inv.issued_at.split("T")[0] : new Date().toISOString().split("T")[0],
-      clientName,
-      clientBrn,
-      supplierName,
-      supplierBrn,
-      items,
-      supplyAmount: inv.supply_amount,
-      taxAmount: inv.tax_amount,
-      totalAmount: inv.total_amount,
-      memo: inv.memo ?? undefined,
-    })
-  );
+  let pdfBuffer: Awaited<ReturnType<typeof renderToBuffer>>;
+  try {
+    pdfBuffer = await renderToBuffer(
+      createElement(InvoicePdf, {
+        invoiceNumber,
+        title: inv.title,
+        issuedAt: inv.issued_at ? inv.issued_at.split("T")[0] : new Date().toISOString().split("T")[0],
+        clientName,
+        clientBrn,
+        supplierName,
+        supplierBrn,
+        items,
+        supplyAmount: inv.supply_amount,
+        taxAmount: inv.tax_amount,
+        totalAmount: inv.total_amount,
+        memo: inv.memo ?? undefined,
+      })
+    );
+  } catch (err) {
+    return NextResponse.json(
+      { error: "PDF 렌더링 실패: " + (err instanceof Error ? err.message : String(err)) },
+      { status: 500 }
+    );
+  }
 
   const admin = createAdminClient();
   const path = `${session.user.id}/${invoiceId}.pdf`;

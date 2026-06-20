@@ -46,21 +46,29 @@ export async function POST(req: NextRequest) {
   const estimateNumber = `EST-${est.id.slice(0, 8).toUpperCase()}`;
   const items: EstimateItem[] = Array.isArray(est.line_items) ? est.line_items as EstimateItem[] : [];
 
-  const pdfBuffer = await renderToBuffer(
-    createElement(EstimatePdf, {
-      estimateNumber,
-      title: est.title,
-      issuedAt: est.issued_at ? est.issued_at.split("T")[0] : new Date().toISOString().split("T")[0],
-      validUntil: est.expires_at ? est.expires_at.split("T")[0] : undefined,
-      clientName,
-      supplierName,
-      items,
-      includeVat: est.include_vat ?? true,
-      discountAmount: est.discount_amount ?? 0,
-      depositRatio: est.deposit_ratio ?? undefined,
-      memo: undefined,
-    })
-  );
+  let pdfBuffer: Awaited<ReturnType<typeof renderToBuffer>>;
+  try {
+    pdfBuffer = await renderToBuffer(
+      createElement(EstimatePdf, {
+        estimateNumber,
+        title: est.title,
+        issuedAt: est.issued_at ? est.issued_at.split("T")[0] : new Date().toISOString().split("T")[0],
+        validUntil: est.expires_at ? est.expires_at.split("T")[0] : undefined,
+        clientName,
+        supplierName,
+        items,
+        includeVat: est.include_vat ?? true,
+        discountAmount: est.discount_amount ?? 0,
+        depositRatio: est.deposit_ratio ?? undefined,
+        memo: undefined,
+      })
+    );
+  } catch (err) {
+    return NextResponse.json(
+      { error: "PDF 렌더링 실패: " + (err instanceof Error ? err.message : String(err)) },
+      { status: 500 }
+    );
+  }
 
   const admin = createAdminClient();
   const path = `${session.user.id}/${estimateId}.pdf`;
