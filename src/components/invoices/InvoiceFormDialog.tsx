@@ -36,6 +36,7 @@ interface InvoiceFormDialogProps {
   invoice?: TaxInvoice | null;
   clients: ClientWithRevenue[];
   onSaved: (invoice: TaxInvoice) => void;
+  defaultClientId?: string;
 }
 
 const NONE_VALUE = "__none__";
@@ -64,6 +65,7 @@ export function InvoiceFormDialog({
   invoice,
   clients,
   onSaved,
+  defaultClientId,
 }: InvoiceFormDialogProps) {
   const isEdit = !!invoice;
 
@@ -83,6 +85,7 @@ export function InvoiceFormDialog({
   // OCR states
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrDone, setOcrDone] = useState(false);
+  const [ocrBrn, setOcrBrn] = useState<string | null>(null);
 
   // Supplier info from auth metadata
   const [supplierInfo, setSupplierInfo] = useState<{
@@ -93,18 +96,19 @@ export function InvoiceFormDialog({
   } | null>(null);
 
   useEffect(() => {
+    if (!open) return;
     getSupabase()
       .auth.getUser()
       .then(({ data: { user } }) => {
         const bp = user?.user_metadata?.business_profile;
         if (bp) setSupplierInfo(bp);
       });
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     if (open) {
       setTitle(invoice?.title ?? "");
-      setClientId(invoice?.client_id ?? NONE_VALUE);
+      setClientId(invoice?.client_id ?? defaultClientId ?? NONE_VALUE);
       setIssuedAt(
         invoice?.issued_at
           ? invoice.issued_at.split("T")[0]
@@ -117,6 +121,7 @@ export function InvoiceFormDialog({
       setError("");
       setIssuanceSuccess(false);
       setOcrDone(false);
+      setOcrBrn(null);
     }
   }, [open, invoice]);
 
@@ -191,6 +196,8 @@ export function InvoiceFormDialog({
       if (json.business_item) updates.business_item = json.business_item;
       if (Object.keys(updates).length > 0)
         await updateClient(selectedClient.id, updates);
+      if (json.business_registration_number)
+        setOcrBrn(json.business_registration_number);
       setOcrDone(true);
     } catch {
       setError("OCR 처리 중 오류가 발생했습니다.");
@@ -264,11 +271,20 @@ export function InvoiceFormDialog({
   }
 
   async function handleBoltaIssue() {
+    console.log("[Bolta] handleBoltaIssue called", {
+      selectedClient: selectedClient?.id,
+      brn: selectedClient?.business_registration_number,
+      ocrBrn,
+      supplierInfo,
+      items,
+      supplyAmount,
+    });
     if (!selectedClient) {
       setError("클라이언트를 선택해주세요.");
       return;
     }
-    if (!selectedClient.business_registration_number) {
+    const suppliedBrn = selectedClient.business_registration_number ?? ocrBrn;
+    if (!suppliedBrn) {
       setError(
         "수신자 사업자등록번호가 없습니다. OCR로 등록하거나 클라이언트 정보를 수정해주세요."
       );
@@ -300,7 +316,7 @@ export function InvoiceFormDialog({
         manager: { email: supplierInfo.manager_email },
       },
       supplied: {
-        identificationNumber: selectedClient.business_registration_number,
+        identificationNumber: suppliedBrn,
         organizationName: selectedClient.company_name,
         representativeName: selectedClient.representative_name ?? "",
         managers: [{ email: selectedClient.email }],

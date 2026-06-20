@@ -97,6 +97,7 @@ export default function ClientDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<TaxInvoice | null>(null);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
   const loadAll = useCallback(async () => {
@@ -650,7 +651,8 @@ export default function ClientDetailPage() {
                     </thead>
                     <tbody>
                       {taxInvoices.map((ti) => (
-                        <tr key={ti.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <tr key={ti.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
+                          onClick={() => { setEditingInvoice(ti as unknown as TaxInvoice); setInvoiceDialogOpen(true); }}>
                           <td className="px-4 py-3 text-sm text-slate-900 font-medium">{ti.title}</td>
                           <td className="px-4 py-3 text-sm text-slate-700 font-outfit">{formatKRW(ti.amount)}</td>
                           <td className="px-4 py-3 text-sm text-slate-500">{formatDate(ti.issued_at)}</td>
@@ -687,9 +689,11 @@ export default function ClientDetailPage() {
       {/* 세금계산서 Dialog */}
       <InvoiceFormDialog
         open={invoiceDialogOpen}
-        onClose={() => setInvoiceDialogOpen(false)}
+        onClose={() => { setInvoiceDialogOpen(false); setEditingInvoice(null); }}
+        invoice={editingInvoice}
         clients={client ? [client] : []}
-        onSaved={() => { setInvoiceDialogOpen(false); loadAll(); }}
+        defaultClientId={id}
+        onSaved={() => { setInvoiceDialogOpen(false); setEditingInvoice(null); loadAll(); }}
       />
 
       {/* 프로젝트 생성 Dialog — 클라이언트 고정 */}
