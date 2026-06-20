@@ -36,6 +36,7 @@ interface InvoiceFormDialogProps {
   invoice?: TaxInvoice | null;
   clients: ClientWithRevenue[];
   onSaved: (invoice: TaxInvoice) => void;
+  defaultClientId?: string;
 }
 
 const NONE_VALUE = "__none__";
@@ -64,6 +65,7 @@ export function InvoiceFormDialog({
   invoice,
   clients,
   onSaved,
+  defaultClientId,
 }: InvoiceFormDialogProps) {
   const isEdit = !!invoice;
 
@@ -106,7 +108,7 @@ export function InvoiceFormDialog({
   useEffect(() => {
     if (open) {
       setTitle(invoice?.title ?? "");
-      setClientId(invoice?.client_id ?? NONE_VALUE);
+      setClientId(invoice?.client_id ?? defaultClientId ?? NONE_VALUE);
       setIssuedAt(
         invoice?.issued_at
           ? invoice.issued_at.split("T")[0]
