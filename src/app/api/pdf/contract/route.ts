@@ -43,21 +43,29 @@ export async function POST(req: NextRequest) {
   const bp = user.user_metadata?.business_profile;
   const supplierName: string | undefined = bp?.organization_name;
 
-  const pdfBuffer = await renderToBuffer(
-    createElement(ContractPdf, {
-      title: c.title,
-      clientName,
-      supplierName,
-      signedAt: c.signed_at ? c.signed_at.split("T")[0] : undefined,
-      expiresAt: c.expires_at ? c.expires_at.split("T")[0] : undefined,
-      contractAmount: c.contract_amount ?? undefined,
-      depositAmount: c.deposit_amount ?? undefined,
-      depositPaid: c.deposit_paid,
-      finalAmount: c.final_amount ?? undefined,
-      finalPaid: c.final_paid,
-      terms: c.terms ?? undefined,
-    })
-  );
+  let pdfBuffer: Awaited<ReturnType<typeof renderToBuffer>>;
+  try {
+    pdfBuffer = await renderToBuffer(
+      createElement(ContractPdf, {
+        title: c.title,
+        clientName,
+        supplierName,
+        signedAt: c.signed_at ? c.signed_at.split("T")[0] : undefined,
+        expiresAt: c.expires_at ? c.expires_at.split("T")[0] : undefined,
+        contractAmount: c.contract_amount ?? undefined,
+        depositAmount: c.deposit_amount ?? undefined,
+        depositPaid: c.deposit_paid,
+        finalAmount: c.final_amount ?? undefined,
+        finalPaid: c.final_paid,
+        terms: c.terms ?? undefined,
+      })
+    );
+  } catch (err) {
+    return NextResponse.json(
+      { error: "PDF 렌더링 실패: " + (err instanceof Error ? err.message : String(err)) },
+      { status: 500 }
+    );
+  }
 
   const admin = createAdminClient();
   const path = `${session.user.id}/${contractId}.pdf`;
