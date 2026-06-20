@@ -92,6 +92,9 @@ export function InvoiceFormDialog({
     registration_number: string;
     organization_name: string;
     representative_name: string;
+    business_address?: string;
+    business_type?: string;
+    business_item?: string;
     manager_email: string;
   } | null>(null);
 
@@ -272,10 +275,22 @@ export function InvoiceFormDialog({
             : "INV-DRAFT",
           title: title.trim() || "세금계산서",
           issuedAt: issuedAt || new Date().toISOString().split("T")[0],
-          clientName: selectedClient?.company_name,
-          clientBrn: selectedClient?.business_registration_number ?? undefined,
-          supplierName: supplierInfo?.organization_name,
-          supplierBrn: supplierInfo?.registration_number,
+          supplier: {
+            name: supplierInfo?.organization_name,
+            brn: supplierInfo?.registration_number,
+            ceo: supplierInfo?.representative_name,
+            address: supplierInfo?.business_address,
+            bizType: supplierInfo?.business_type,
+            bizItem: supplierInfo?.business_item,
+          },
+          recipient: {
+            name: selectedClient?.company_name,
+            brn: selectedClient?.business_registration_number ?? ocrBrn ?? undefined,
+            ceo: selectedClient?.representative_name ?? undefined,
+            address: selectedClient?.business_address ?? undefined,
+            bizType: selectedClient?.business_type ?? undefined,
+            bizItem: selectedClient?.business_item ?? undefined,
+          },
           items,
           supplyAmount,
           taxAmount,
