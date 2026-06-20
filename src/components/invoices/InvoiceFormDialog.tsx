@@ -83,6 +83,7 @@ export function InvoiceFormDialog({
   // OCR states
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrDone, setOcrDone] = useState(false);
+  const [ocrBrn, setOcrBrn] = useState<string | null>(null);
 
   // Supplier info from auth metadata
   const [supplierInfo, setSupplierInfo] = useState<{
@@ -117,6 +118,7 @@ export function InvoiceFormDialog({
       setError("");
       setIssuanceSuccess(false);
       setOcrDone(false);
+      setOcrBrn(null);
     }
   }, [open, invoice]);
 
@@ -191,6 +193,8 @@ export function InvoiceFormDialog({
       if (json.business_item) updates.business_item = json.business_item;
       if (Object.keys(updates).length > 0)
         await updateClient(selectedClient.id, updates);
+      if (json.business_registration_number)
+        setOcrBrn(json.business_registration_number);
       setOcrDone(true);
     } catch {
       setError("OCR 처리 중 오류가 발생했습니다.");
@@ -268,7 +272,8 @@ export function InvoiceFormDialog({
       setError("클라이언트를 선택해주세요.");
       return;
     }
-    if (!selectedClient.business_registration_number) {
+    const suppliedBrn = selectedClient.business_registration_number ?? ocrBrn;
+    if (!suppliedBrn) {
       setError(
         "수신자 사업자등록번호가 없습니다. OCR로 등록하거나 클라이언트 정보를 수정해주세요."
       );
@@ -300,7 +305,7 @@ export function InvoiceFormDialog({
         manager: { email: supplierInfo.manager_email },
       },
       supplied: {
-        identificationNumber: selectedClient.business_registration_number,
+        identificationNumber: suppliedBrn,
         organizationName: selectedClient.company_name,
         representativeName: selectedClient.representative_name ?? "",
         managers: [{ email: selectedClient.email }],
