@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, createElement } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import {
   Dialog,
@@ -255,19 +255,44 @@ export function InvoiceFormDialog({
   }
 
   async function handlePdfIssue() {
-    if (!invoice?.id) return;
     setPdfLoading(true);
+    setError("");
     try {
-      const res = await fetch("/api/pdf/invoice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invoiceId: invoice.id }),
-      });
-      const json = await res.json();
-      if (!res.ok) { setError(json.error ?? "PDF 생성 오류"); return; }
-      window.open(json.url, "_blank");
-    } catch { setError("PDF 생성 중 오류가 발생했습니다."); }
-    finally { setPdfLoading(false); }
+      // Cloudflare Workers는 런타임 WASM 컴파일을 막아 서버에서 react-pdf를
+      // 렌더링할 수 없다. 브라우저(WASM 허용)에서 렌더링한다.
+      // react-pdf는 무거우므로 버튼 클릭 시에만 동적 로드.
+      const [{ pdf }, { InvoicePdf }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/pdf/InvoicePdf"),
+      ]);
+      const blob = await pdf(
+        createElement(InvoicePdf, {
+          invoiceNumber: invoice?.id
+            ? `INV-${invoice.id.slice(0, 8).toUpperCase()}`
+            : "INV-DRAFT",
+          title: title.trim() || "세금계산서",
+          issuedAt: issuedAt || new Date().toISOString().split("T")[0],
+          clientName: selectedClient?.company_name,
+          clientBrn: selectedClient?.business_registration_number ?? undefined,
+          supplierName: supplierInfo?.organization_name,
+          supplierBrn: supplierInfo?.registration_number,
+          items,
+          supplyAmount,
+          taxAmount,
+          totalAmount,
+          memo: memo.trim() || undefined,
+        })
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      setError(
+        "PDF 생성 중 오류: " + (err instanceof Error ? err.message : String(err))
+      );
+    } finally {
+      setPdfLoading(false);
+    }
   }
 
   async function handleBoltaIssue() {
