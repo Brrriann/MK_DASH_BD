@@ -30,15 +30,19 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-          BOLTA_API_KEY: ${{ secrets.BOLTA_API_KEY }}
-          BOLTA_CUSTOMER_KEY: ${{ secrets.BOLTA_CUSTOMER_KEY }}
+          POPBILL_LINK_ID: ${{ secrets.POPBILL_LINK_ID }}
+          POPBILL_SECRET_KEY: ${{ secrets.POPBILL_SECRET_KEY }}
+          POPBILL_CORP_NUM: ${{ secrets.POPBILL_CORP_NUM }}
+          POPBILL_IS_TEST: ${{ secrets.POPBILL_IS_TEST }}
 
       - name: Set Cloudflare Workers secrets
         run: |
           echo "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
           echo "${{ secrets.NVIDIA_API_KEY }}" | npx wrangler secret put NVIDIA_API_KEY
-          echo "${{ secrets.BOLTA_API_KEY }}" | npx wrangler secret put BOLTA_API_KEY
-          echo "${{ secrets.BOLTA_CUSTOMER_KEY }}" | npx wrangler secret put BOLTA_CUSTOMER_KEY
+          echo "${{ secrets.POPBILL_LINK_ID }}" | npx wrangler secret put POPBILL_LINK_ID
+          echo "${{ secrets.POPBILL_SECRET_KEY }}" | npx wrangler secret put POPBILL_SECRET_KEY
+          echo "${{ secrets.POPBILL_CORP_NUM }}" | npx wrangler secret put POPBILL_CORP_NUM
+          echo "${{ secrets.POPBILL_IS_TEST }}" | npx wrangler secret put POPBILL_IS_TEST
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
