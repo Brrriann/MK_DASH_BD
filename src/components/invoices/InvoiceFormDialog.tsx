@@ -310,13 +310,13 @@ export function InvoiceFormDialog({
     }
   }
 
-  async function handleBoltaIssue() {
+  async function handlePopbillIssue() {
     if (!selectedClient) {
       setError("클라이언트를 선택해주세요.");
       return;
     }
-    const suppliedBrn = selectedClient.business_registration_number ?? ocrBrn;
-    if (!suppliedBrn) {
+    const invoiceeBrn = selectedClient.business_registration_number ?? ocrBrn;
+    if (!invoiceeBrn) {
       setError(
         "수신자 사업자등록번호가 없습니다. OCR로 등록하거나 클라이언트 정보를 수정해주세요."
       );
@@ -338,34 +338,10 @@ export function InvoiceFormDialog({
     setIssuing(true);
     setError("");
 
-    const boltaData = {
-      date: issuedAt || new Date().toISOString().split("T")[0],
-      purpose: "CLAIM",
-      supplier: {
-        identificationNumber: supplierInfo.registration_number,
-        organizationName: supplierInfo.organization_name,
-        representativeName: supplierInfo.representative_name,
-        manager: { email: supplierInfo.manager_email },
-      },
-      supplied: {
-        identificationNumber: suppliedBrn,
-        organizationName: selectedClient.company_name,
-        representativeName: selectedClient.representative_name ?? "",
-        managers: [{ email: selectedClient.email }],
-      },
-      items: items.map((item) => ({
-        date: issuedAt || new Date().toISOString().split("T")[0],
-        name: item.name,
-        supplyCost: item.supply_amount,
-        tax: Math.round(item.supply_amount * 0.1),
-      })),
-    };
-
     try {
-      // First save to DB
+      // 1) DB 저장
       const data: CreateInvoiceInput = {
-        title:
-          title.trim() || selectedClient.company_name + " 세금계산서",
+        title: title.trim() || selectedClient.company_name + " 세금계산서",
         items,
         supply_amount: supplyAmount,
         tax_amount: taxAmount,
@@ -374,7 +350,8 @@ export function InvoiceFormDialog({
         memo: memo.trim() || undefined,
         client_id: selectedClient.id,
         payment_received: paymentReceived,
-        payment_received_at: paymentReceived && paymentReceivedAt ? paymentReceivedAt : null,
+        payment_received_at:
+          paymentReceived && paymentReceivedAt ? paymentReceivedAt : null,
       };
       let saved: TaxInvoice;
       if (isEdit && invoice) {
@@ -383,29 +360,47 @@ export function InvoiceFormDialog({
         saved = await createInvoice(data);
       }
 
-      // Then issue via Bolta
-      const res = await fetch("/api/bolta/issue", {
+      // 2) 팝빌 즉시발행 (등록+발행+국세청 전송)
+      const res = await fetch("/api/popbill/issue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(boltaData),
+        body: JSON.stringify({
+          invoiceId: saved.id,
+          writeDate: issuedAt || new Date().toISOString().split("T")[0],
+          purposeType: paymentReceived ? "영수" : "청구",
+          invoicee: {
+            corpNum: invoiceeBrn,
+            corpName: selectedClient.company_name,
+            ceoName: selectedClient.representative_name ?? "",
+            addr: selectedClient.business_address ?? "",
+            bizType: selectedClient.business_type ?? "",
+            bizClass: selectedClient.business_item ?? "",
+            email: selectedClient.email ?? "",
+          },
+          items: items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            supply_amount: i.supply_amount,
+          })),
+        }),
       });
       const result = await res.json();
 
       if (!res.ok) {
         setError(
           result.error ??
-            "볼타 발행에 실패했습니다. 세금계산서는 저장되었습니다."
+            "팝빌 발행에 실패했습니다. 세금계산서는 저장되었습니다."
         );
         onSaved(saved);
         return;
       }
 
-      // Save bolta issuance key if returned
-      const issuanceKey =
-        result.data?.issuanceKey ?? result.issuanceKey;
-      if (issuanceKey) {
+      // 3) 발행 식별자(문서관리번호/국세청 승인번호) 저장
+      if (result.mgtKey || result.ntsConfirmNum) {
         saved = await updateInvoice(saved.id, {
-          bolta_issuance_key: issuanceKey,
+          popbill_mgt_key: result.mgtKey ?? null,
+          nts_confirm_num: result.ntsConfirmNum ?? null,
         });
       }
 
@@ -518,7 +513,7 @@ export function InvoiceFormDialog({
                   사업자등록번호 미입력
                 </p>
                 <p className="text-xs text-amber-700 mt-0.5">
-                  볼타 발행에 필요합니다. 사업자등록증을 스캔하면 자동
+                  팝빌 발행에 필요합니다. 사업자등록증을 스캔하면 자동
                   저장됩니다.
                 </p>
               </div>
@@ -676,7 +671,7 @@ export function InvoiceFormDialog({
           {/* 공급자 정보 (미설정 경고) */}
           {!supplierInfo?.registration_number && (
             <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              볼타 발행을 위해{" "}
+              팝빌 발행을 위해{" "}
               <a href="/settings" className="underline font-medium">
                 설정
               </a>
@@ -722,7 +717,7 @@ export function InvoiceFormDialog({
             </Button>
             <Button
               type="button"
-              onClick={handleBoltaIssue}
+              onClick={handlePopbillIssue}
               disabled={saving || issuing || !selectedClient}
               className="bg-blue-600 hover:bg-blue-700 text-white font-outfit"
             >

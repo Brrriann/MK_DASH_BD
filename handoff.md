@@ -88,7 +88,8 @@
 
 - **Supabase Storage 버킷 미생성**: `estimates`, `contracts` 버킷을 Supabase 대시보드에서 Public으로 직접 생성 필요 — 없으면 파일 업로드 실패
 - **이메일 발송**: `magnatekorea.com` Resend 미인증 (아임웹 DNS 언더스코어 레코드 미지원). Cloudflare DNS 이전 또는 대안 검토 필요
-- **Bolta API** (`/api/bolta/issue`): 실제 API 키 테스트 미완
+- **팝빌(Popbill) 세금계산서**: REST 연동 완료(기본 테스트 환경). 운영 전 필수 — ① Supabase에서 `022_popbill_taxinvoice.sql` 실행, ② Cloudflare 시크릿 `POPBILL_LINK_ID`·`POPBILL_SECRET_KEY`·`POPBILL_CORP_NUM` 설정. 운영 전환은 `POPBILL_IS_TEST=false`. (Bolta는 완전 제거됨)
+- **팝빌 IP 제한**: Workers egress IP가 가변이라 토큰 발급 시 IP 제한 해제(ForwardIP `*`) 사용 — 팝빌 연동 설정에서 IP 제한이 켜져 있으면 발행 실패할 수 있음
 - **로컬 빌드**: Windows webpack EISDIR — GitHub Actions로 우회 중
 
 ## 다음 TODO
@@ -108,7 +109,9 @@ SUPABASE_SERVICE_ROLE_KEY
 RESEND_API_KEY
 RESEND_FROM
 NVIDIA_API_KEY
-BOLTA_API_KEY
-BOLTA_CUSTOMER_KEY
+POPBILL_LINK_ID
+POPBILL_SECRET_KEY
+POPBILL_CORP_NUM          # 공급자(마그네이트코리아) 사업자번호, 숫자만
+POPBILL_IS_TEST           # 미설정/그외=테스트, 운영 전환 시 false
 NEXT_PUBLIC_APP_URL=https://mk-dash-bd.official-f0c.workers.dev
 ```

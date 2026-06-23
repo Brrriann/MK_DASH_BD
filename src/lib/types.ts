@@ -133,7 +133,8 @@ export interface TaxInvoice {
   issued_at: string;
   pdf_url: string | null;
   memo: string | null;
-  bolta_issuance_key: string | null;
+  popbill_mgt_key: string | null;
+  nts_confirm_num: string | null;
   client_id: string | null;
   payment_received: boolean;
   payment_received_at: string | null;
